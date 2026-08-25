@@ -3,7 +3,8 @@ import { chromium } from "playwright";
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const OUT = process.env.OUT ?? "/tmp/shots";
 
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" });
+const EXE = process.env.PLAYWRIGHT_CHROMIUM_PATH;
+const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 const page = await ctx.newPage();
 

@@ -14,7 +14,10 @@ const { PrismaClient } = require("../src/generated/prisma");
 const prisma = new PrismaClient();
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
-const EXE = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+// CI installs its own browser (`npx playwright install chromium`), so the
+// default launch is correct there. Only override when a sandbox pins the
+// binary somewhere Playwright can't discover it.
+const EXE = process.env.PLAYWRIGHT_CHROMIUM_PATH;
 
 const checks = [];
 const check = (name, pass, detail = "") => {
@@ -22,7 +25,7 @@ const check = (name, pass, detail = "") => {
   console.log(`${pass ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
 };
 
-const browser = await chromium.launch({ executablePath: EXE });
+const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const ctx = await browser.newContext({
   viewport: { width: 1280, height: 900 },
   extraHTTPHeaders: { referer: "https://m.facebook.com/" },
