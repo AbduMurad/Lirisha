@@ -62,7 +62,7 @@ export function Header({ announcement }: { announcement: string }) {
           <Link href="/" className="hov shrink-0" aria-label="ليريشيا">
             <span
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-heading)",
                 fontSize: "var(--t-h4)",
                 fontWeight: 500,
                 letterSpacing: 0,

@@ -13,7 +13,17 @@ type Frame = { url: string; width: number; height: number; blur: string };
 const e = manifest.editorial as Record<string, Frame>;
 
 export const EDITORIAL_IMAGES = {
-  hero: e.hero,
+  /** Wide band of drape and embroidery — desktop, and the video's poster. */
+  heroWide: e["hero-wide"],
+  /** Full portrait — phones, where a wide crop would letterbox. */
+  heroPortrait: e["hero-portrait"],
   atelier: e.atelier,
   packaging: [e["packaging-1"], e["packaging-2"], e["packaging-3"]].filter(Boolean),
 };
+
+/**
+ * Dropped in once the reels are exported from Meta Business Suite and encoded
+ * by scripts/build-hero-video.mjs. Absent until then, and the hero falls back
+ * to the still — so the page never waits on a file that isn't there.
+ */
+export const HERO_VIDEO: { mp4: string; webm?: string } | null = null;

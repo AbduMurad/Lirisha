@@ -197,7 +197,13 @@ export const CATALOGUE = [
 
 /** Full-bleed frames the storefront uses outside the catalogue. */
 export const EDITORIAL = [
-  { key: "hero", src: "lirisha-03", ar: 3 / 4, width: 1600, top: 0.0, x: 0.56 },
+  // The hero is art-directed rather than one frame stretched two ways. A 3:4
+  // portrait dropped into a wide desktop box crops to a band across the
+  // model's head; a wide crop on a phone leaves a letterbox. So: a wide band
+  // of drape and embroidery for desktop, the full portrait for mobile. The
+  // desktop frame doubles as the poster for the video loop.
+  { key: "hero-wide", src: "lirisha-03", ar: 16 / 9, width: 2000, top: 0.3, x: 0.56 },
+  { key: "hero-portrait", src: "lirisha-03", ar: 3 / 4, width: 1200, top: 0.02, x: 0.56 },
   { key: "atelier", src: "lirisha-20", ar: 4 / 5, width: 1200, top: 0.0, x: 0.45 },
   { key: "packaging-1", src: "lirisha-24", ar: 1, width: 900, top: 0.0, x: 0.56 },
   { key: "packaging-2", src: "lirisha-34", ar: 1, width: 900, top: 0.0, x: 0.5 },

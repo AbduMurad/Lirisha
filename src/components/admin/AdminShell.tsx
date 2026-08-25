@@ -25,7 +25,7 @@ export function AdminShell({
           style={{ paddingBlock: 14 }}
         >
           <div className="flex items-center gap-6">
-            <Link href="/" className="hov" style={{ fontFamily: "var(--font-display)", fontSize: "var(--t-h4)" }}>
+            <Link href="/" className="hov" style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h4)" }}>
               ليريشيا
             </Link>
             <nav className="flex flex-wrap items-center gap-5">
@@ -91,7 +91,7 @@ export function Stat({
       <p className="micro">{label}</p>
       <p
         className="num"
-        style={{ fontFamily: "var(--font-display)", fontSize: "var(--t-h2)", lineHeight: 1.3, color: "var(--color-ink)" }}
+        style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h2)", lineHeight: 1.3, color: "var(--color-ink)" }}
       >
         {value}
       </p>

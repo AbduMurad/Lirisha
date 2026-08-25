@@ -89,7 +89,7 @@ export function ProductCard({
       <div className="mt-2">
         <h3
           className="font-normal text-charcoal"
-          style={{ fontFamily: "var(--font-body)", fontSize: "var(--t-body-s)", lineHeight: 1.75 }}
+          style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h4)", lineHeight: 1.7 }}
         >
           {product.nameAr}
           {product.colorAr ? <span className="text-muted"> — {product.colorAr}</span> : null}
@@ -105,7 +105,7 @@ export function Placeholder({ label }: { label?: string }) {
     <div className="absolute inset-0 grid place-items-center bg-linen">
       <span
         className="text-muted2"
-        style={{ fontFamily: "var(--font-display)", fontSize: "var(--t-body-s)" }}
+        style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-body-s)" }}
       >
         {label ?? "ليريشيا"}
       </span>

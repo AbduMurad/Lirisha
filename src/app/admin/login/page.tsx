@@ -9,7 +9,7 @@ export default async function LoginPage() {
   return (
     <div className="grid place-items-center" style={{ minBlockSize: "100svh" }}>
       <div style={{ inlineSize: "min(360px, 88vw)" }}>
-        <p style={{ fontFamily: "var(--font-display)", fontSize: "var(--t-h2)", lineHeight: 1.3 }}>
+        <p style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h2)", lineHeight: 1.3 }}>
           ليريشيا
         </p>
         <p className="micro mt-1">لوحة التحكم</p>

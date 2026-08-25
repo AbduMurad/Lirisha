@@ -27,8 +27,22 @@
   --color-error: #a33b33;
   --color-success: #4a6b4f;
 
-  --font-display: var(--font-reem-kufi), "Noto Kufi Arabic", sans-serif;
-  --font-body: var(--font-plex-arabic), "IBM Plex Sans", system-ui, sans-serif;
+  /* Warmth borrowed from Their Nibs. Used for the announcement bar, the
+     kicker over photography and hover grounds — never for large fields, which
+     is where blush turns from boutique into bakery. */
+  --color-blush: #e9d2c6;
+  --color-blush-deep: #cf9d86;
+
+  /* Ground is a warm ivory rather than white, which is the single biggest
+     reason Cocoon reads as expensive: nothing on the page is pure #fff. */
+  --color-ground: #f2efe9;
+
+  /* Display only — Aref Ruqaa collides with itself below ~40px. */
+  --font-display: var(--font-aref), "Amiri", serif;
+  /* Headings and product names. */
+  --font-heading: var(--font-amiri), "Noto Naskh Arabic", serif;
+  /* Body, labels, prices, interface. */
+  --font-body: var(--font-tajawal), system-ui, sans-serif;
 }
 
 :root {
@@ -47,6 +61,9 @@
   --t-h2: 2rem;
   --t-h1: 2.5rem;
   --t-display: 3rem;
+  /* The one genuinely large size on the site. Fluid so the Ruqaa hand keeps
+     its proportion from a 390px phone to a 1600px desktop. */
+  --t-hero: clamp(2.6rem, 5.6vw, 4.9rem);
 
   /* Layout */
   --page-margin: 16px;
@@ -109,7 +126,7 @@ html {
 }
 
 body {
-  background: var(--color-ivory);
+  background: var(--color-ground);
   color: var(--color-charcoal);
   font-family: var(--font-body);
   font-size: var(--t-body);
@@ -125,13 +142,28 @@ body {
   color: var(--color-ink);
 }
 
+/* Headings are Amiri, not the display face. Aref Ruqaa is opt-in via .display,
+   because a section heading at 24px in a Ruqaa hand is something you decode
+   rather than read. */
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   color: var(--color-ink);
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.6;
+  text-wrap: balance;
+}
+
+/* The one calligraphic moment per page. Ruqaa swings a long way above and
+   below the baseline, so it needs line-height a serif never would, and it
+   must never be tracked — the script is joined. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
   text-wrap: balance;
 }
 

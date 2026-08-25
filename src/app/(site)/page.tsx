@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/site/ProductCard";
-import { EDITORIAL_IMAGES } from "@/lib/editorial";
+import { EDITORIAL_IMAGES, HERO_VIDEO } from "@/lib/editorial";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default async function HomePage() {
     getProducts({ category: "abaya" }, 6),
   ]);
 
-  const hero = EDITORIAL_IMAGES.hero;
+  const { heroWide, heroPortrait } = EDITORIAL_IMAGES;
 
   return (
     <>
@@ -28,52 +28,81 @@ export default async function HomePage() {
         className="relative"
         style={{ blockSize: "calc(100svh - var(--header-h) - 40px)", minBlockSize: 460 }}
       >
+        {/* Art-directed rather than one frame stretched two ways: a wide band
+            of drape for desktop, the whole portrait on a phone. The video, when
+            it exists, replaces only the desktop frame — a few MB of autoplay
+            on Libyan mobile data is a cost the customer didn't ask for. */}
         <Image
-          src={hero.url}
+          src={heroPortrait.url}
           alt="مجموعة ليريشيا"
           fill
           priority
           sizes="100vw"
           placeholder="blur"
-          blurDataURL={hero.blur}
-          className="object-cover"
-          // The frame is a 3:4 portrait; on a wide viewport `cover` crops
-          // vertically, and centring lands on the head. Bias downward so the
-          // embroidered sleeve — the thing being sold — stays in shot.
-          style={{ objectPosition: "center 62%" }}
+          blurDataURL={heroPortrait.blur}
+          className="object-cover md:hidden"
         />
+        <Image
+          src={heroWide.url}
+          alt="مجموعة ليريشيا"
+          fill
+          priority
+          sizes="100vw"
+          placeholder="blur"
+          blurDataURL={heroWide.blur}
+          className="hidden object-cover md:block"
+        />
+        {HERO_VIDEO && (
+          <video
+            className="absolute inset-0 hidden size-full object-cover md:block"
+            poster={heroWide.url}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden
+          >
+            <source src={HERO_VIDEO.mp4} type="video/mp4" />
+            {HERO_VIDEO.webm && <source src={HERO_VIDEO.webm} type="video/webm" />}
+          </video>
+        )}
         <div
           className="absolute inset-0"
           style={{
-            // The hero frame is pale satin under a window, so the type sits on
+            // The frame is pale satin under a window, so the type sits on
             // near-white more often than not. Weighted for the worst case, not
             // the average one.
             background:
-              "linear-gradient(to top, rgba(26,24,21,.80) 0%, rgba(26,24,21,.46) 30%, rgba(26,24,21,0) 68%)",
+              "linear-gradient(to top, rgba(20,18,15,.88) 0%, rgba(20,18,15,.62) 26%, rgba(20,18,15,.20) 52%, rgba(20,18,15,0) 78%)",
           }}
         />
         <div className="container-l absolute inset-x-0 bottom-0" style={{ paddingBlockEnd: 48 }}>
           <p
             className="label"
-            style={{ color: "var(--color-goldlight)", marginBlockEnd: 10 }}
+            style={{ color: "#E7DCC8", marginBlockEnd: 14, letterSpacing: ".22em" }}
           >
             مجموعة 2026
           </p>
           <h1
+            className="display"
             style={{
-              fontSize: "var(--t-display)",
-              lineHeight: 1.3,
-              color: "var(--color-ivory)",
-              fontWeight: 400,
-              maxInlineSize: "18ch",
+              fontSize: "var(--t-hero)",
+              color: "#F6F2EA",
+              maxInlineSize: "22ch",
             }}
           >
             أناقة بتفاصيلها
           </h1>
           <Link
             href="/shop"
-            className="cta-line label mt-6 inline-block"
-            style={{ color: "var(--color-ivory)" }}
+            className="label mt-8 inline-block"
+            style={{
+              color: "#F6F2EA",
+              border: "1px solid rgba(246,242,234,.5)",
+              padding: "13px 32px",
+              letterSpacing: ".18em",
+            }}
           >
             اكتشفي المجموعة
           </Link>
@@ -164,7 +193,7 @@ export default async function HomePage() {
                       insetInlineStart: 20,
                       color: "var(--color-ivory)",
                       fontSize: "var(--t-h4)",
-                      fontFamily: "var(--font-display)",
+                      fontFamily: "var(--font-heading)",
                     }}
                   >
                     {edit.label}

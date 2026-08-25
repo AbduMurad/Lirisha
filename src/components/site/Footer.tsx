@@ -42,7 +42,7 @@ export function Footer({
           <div className="md:col-span-2">
             <p
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-heading)",
                 fontSize: "var(--t-h2)",
                 color: "var(--color-goldlight)",
                 lineHeight: 1.4,

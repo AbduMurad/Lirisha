@@ -245,11 +245,18 @@
     ]
   },
   "editorial": {
-    "hero": {
-      "url": "/images/editorial/hero.webp",
-      "width": 1600,
-      "height": 2133,
-      "blur": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADwAQCdASoMABAAA4BaJQBOgCHelQ+7nOwAyydWmERxTzRIdAjCAhpbIHEu7ujB6UXWJ9oPP1Jubp6Y/nSXtGoeA4hGK4snGY2pSrgIutLL3nqAAAA=",
+    "hero-wide": {
+      "url": "/images/editorial/hero-wide.webp",
+      "width": 2000,
+      "height": 1125,
+      "blur": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoMAAcAA4BaJYgCdAEfA0Hs2BAA8Rp5PwGHXWzWLuPLyXpDakpSFJcR55sHQ8JCV6a0f82W2JH8yij4KAAAAA==",
+      "source": "lirisha-03"
+    },
+    "hero-portrait": {
+      "url": "/images/editorial/hero-portrait.webp",
+      "width": 1200,
+      "height": 1600,
+      "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAAAwAgCdASoMABAAA4BaJYgCdAEO5vWNnf2AAADeM7CxAJExXVacC3UtOEFR5tw2ysutkc9nTMFSNP/A6DNDAWv/m6UseoO7P/K9koSUGkaO0K6GuVQAAA==",
       "source": "lirisha-03"
     },
     "atelier": {

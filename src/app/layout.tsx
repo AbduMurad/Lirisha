@@ -1,18 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Reem_Kufi, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Aref_Ruqaa, Amiri, Tajawal } from "next/font/google";
 import "./globals.css";
 
-const reemKufi = Reem_Kufi({
+/**
+ * Three faces, and the rule for each is a size rule.
+ *
+ * Aref Ruqaa is a Ruqaa calligraphic face — beautiful at 70px over a
+ * photograph, illegible at 20px, where its strokes collide. So it is reserved
+ * for the one or two display moments per page and never used for anything a
+ * customer has to scan. Amiri, a classical Naskh, carries headings and product
+ * names: it keeps the high-contrast, hand-cut feeling a step down in scale.
+ * Tajawal takes body, labels, prices and every piece of interface furniture.
+ */
+const arefRuqaa = Aref_Ruqaa({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-reem-kufi",
+  weight: ["400", "700"],
+  variable: "--font-aref",
   display: "swap",
 });
 
-const plexArabic = IBM_Plex_Sans_Arabic({
+const amiri = Amiri({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-arabic",
+  weight: ["400", "700"],
+  variable: "--font-amiri",
+  display: "swap",
+});
+
+const tajawal = Tajawal({
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-tajawal",
   display: "swap",
 });
 
@@ -41,7 +58,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${reemKufi.variable} ${plexArabic.variable}`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${arefRuqaa.variable} ${amiri.variable} ${tajawal.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
