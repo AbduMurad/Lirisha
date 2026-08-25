@@ -110,11 +110,46 @@ Ranked for a Libyan shop that needs Docker Compose:
    regions is often exhausted ("out of host capacity"), and Oracle reclaims idle
    instances. Pick your home region carefully — free resources are pinned to it.
 3. **[Google Cloud free tier](https://cloud.google.com/free)** — one `e2-micro`
-   (1 GB RAM, 30 GB disk), free forever, but **only** in `us-west1`,
-   `us-central1` or `us-east1`. This app fits in 1 GB; the cost is ~150–200 ms
-   of latency from Libya.
+   (1 GB RAM, 30 GB disk), only in `us-west1`, `us-central1` or `us-east1`.
+   **It is not actually free for a website.** Google bills every external IPv4
+   attached to a standard VM at
+   [$0.005/hour ≈ $3.60/month](https://cloud.google.com/vpc/network-pricing);
+   the free allowance is one hour a month. A public site needs a public IP, so
+   the "always free" VM costs about $3.60/month — for 1 GB of RAM, in the US,
+   ~150–200 ms from Libya.
 4. **AWS / Azure** — credit- or 12-month-limited, then billed. Fine for a demo,
    wrong for a shop that should still be up next year.
+
+Given (3), **Hetzner CX22 at ~€4/month** is within pennies of the GCP bill and
+gives 2 vCPU / 4 GB in Falkenstein — four times the memory and a third of the
+latency. Unless the box is genuinely free (option 1 or 2), pay the €4.
+
+### The domain
+
+A VM gives you an IP, not a hostname — Compute Engine has no free `*.run.app`
+equivalent (that's Cloud Run, which can't run a compose file). So:
+
+- **Fastest real URL, zero cost:** a subdomain of a domain you already own —
+  `lirisha.abdumurad.com`. One A record, done.
+- **For the brand:** `lirisha.ly` through Libyan Spider, or a cheaper
+  `.com`/`.store` at Cloudflare Registrar (sold at cost).
+- **Throwaway demo only:** `sslip.io` / `nip.io` resolve `<your-ip>.sslip.io`
+  to that IP and Let's Encrypt will issue for it, so HTTPS works with no
+  registration at all. Fine to show a client, wrong for a shop.
+
+Whichever you pick, three things have to line up:
+
+1. `NEXT_PUBLIC_SITE_URL` is **baked in at build time** (a Docker build arg), so
+   set it in `.env` *before* `docker compose up -d --build`. Otherwise the
+   "استفسري عبر واتساب" links will carry `localhost` URLs.
+2. Open **tcp:80 and tcp:443** in the VPC firewall. Caddy's HTTP-01 challenge
+   needs port 80 or no certificate is ever issued.
+3. Reserve a **static** external IP and keep it attached — ephemeral IPs change
+   on stop/start. (Attached static and ephemeral cost the same; an *unattached*
+   reserved IP is billed at double, so don't leave one dangling.)
+
+On Cloudflare, set the record to **DNS-only (grey cloud)** until Caddy has the
+certificate, then turn the proxy on if you want it.
 
 Not suitable: Render, Koyeb, Railway, Fly.io. They run a single container, not a
 compose file; Fly removed its free tier in 2024, Railway is credit-only, and
