@@ -22,7 +22,10 @@ npm-debug.log*
 .DS_Store
 Dockerfile
 docker-compose*.yml
-README.md
-DESIGN.md
-PROJECT-BRIEF.md
 docs
+
+# No root-level prose in the build context. The runner stage doesn't copy any
+# of it, but operational notes are exactly where a hostname or a password ends
+# up by accident, and the published image is public.
+*.md
+SERVER-ACCESS*
