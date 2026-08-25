@@ -1,26 +1,412 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════
+   LIRISHA — design tokens
+   Derived from measured production CSS of Totême, Cecilie Bahnsen,
+   Khaite and Brunello Cucinelli. See DESIGN.md for the rationale.
+   Rules of the house:
+     · 5:7 crops, never 1:1        · radius 0, shadow none
+     · hairlines at 0.5px          · hover is opacity, nothing else
+     · two type weights (400/500)  · logical properties only
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-ivory: #fbf9f5;
+  --color-sand: #f1ede7;
+  --color-linen: #e7e1d7;
+  --color-line: #ddd6c9;
+  --color-line-strong: #2a2724;
+  --color-ink: #1a1815;
+  --color-charcoal: #2a2724;
+  --color-ink2: #57504a;
+  --color-muted: #6e665c;
+  --color-muted2: #8c8378;
+  --color-gold: #a9884e;
+  --color-goldtext: #8a6e3c;
+  --color-goldlight: #c9a96a;
+  --color-error: #a33b33;
+  --color-success: #4a6b4f;
+
+  --font-display: var(--font-reem-kufi), "Noto Kufi Arabic", sans-serif;
+  --font-body: var(--font-plex-arabic), "IBM Plex Sans", system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Fluid unit: exactly 1px @1500px viewport, floors at 1px, ceils at 1.4px.
+     The whole page scales as one organism between 1440 and 2100. */
+  --u: clamp(1px, 0.04px + 0.0667vw, 1.4px);
+
+  /* Type scale (px @1500). Arabic line-heights run ~+0.2 over Latin. */
+  --t-micro: 0.6875rem;
+  --t-label: 0.75rem;
+  --t-body-s: 0.875rem;
+  --t-body: 1rem;
+  --t-body-l: 1.125rem;
+  --t-h4: 1.25rem;
+  --t-h3: 1.5rem;
+  --t-h2: 2rem;
+  --t-h1: 2.5rem;
+  --t-display: 3rem;
+
+  /* Layout */
+  --page-margin: 16px;
+  --container: 1320px;
+  --grid-gutter: 24px;
+  --card-gap-y: 48px;
+  --header-h: 64px;
+  --drawer-pad: 24px;
+  --section-gap: 88px;
+
+  /* Surface */
+  --radius: 0;
+  --border-w: 0.5px;
+  --elev-bg: rgba(251, 249, 245, 0.95);
+  --elev-blur: blur(34px);
+
+  /* Motion — three tokens, no more */
+  --dur-fast: 150ms;
+  --dur: 300ms;
+  --dur-slow: 600ms;
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-drawer: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --dir: 1;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+[dir="rtl"] {
+  --dir: -1;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (min-width: 768px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --page-margin: calc(var(--u) * 32);
+    --grid-gutter: calc(var(--u) * 40);
+    --card-gap-y: calc(var(--u) * 64);
+    --header-h: calc(var(--u) * 72);
+    --drawer-pad: calc(var(--u) * 32);
+    --section-gap: calc(var(--u) * 120);
   }
 }
 
+@media (min-width: 1280px) {
+  :root {
+    /* the luxury inversion: gutter between products is 2× the page margin */
+    --grid-gutter: calc(var(--u) * 64);
+    --card-gap-y: calc(var(--u) * 80);
+    --section-gap: calc(var(--u) * 160);
+  }
+}
+
+/* ─── base ─────────────────────────────────────────────────── */
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.75;
+  letter-spacing: 0; /* Arabic is a connected script — never track it */
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-linen);
+  color: var(--color-ink);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  color: var(--color-ink);
+  font-weight: 500;
+  text-wrap: balance;
+}
+
+/* Latin embedded in Arabic never gets tracked or reversed */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── primitives ───────────────────────────────────────────── */
+
+.container-l {
+  inline-size: 100%;
+  max-inline-size: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--page-margin);
+}
+
+.hair {
+  border-block-end: var(--border-w) solid var(--color-line);
+}
+
+.hair-t {
+  border-block-start: var(--border-w) solid var(--color-line);
+}
+
+/* The entire hover vocabulary of the site. */
+@media (hover: hover) {
+  .hov {
+    transition: opacity var(--dur-fast) var(--ease);
+  }
+  .hov:hover {
+    opacity: 0.6;
+  }
+}
+
+/* Text CTA with a gold hairline that extends from the inline-start edge */
+.cta-line {
+  position: relative;
+  display: inline-block;
+  padding-block-end: 6px;
+}
+.cta-line::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: var(--border-w);
+  background: var(--color-gold);
+  transform: scaleX(1);
+  transform-origin: var(--x-origin, right);
+  transition: transform var(--dur) var(--ease);
+}
+@media (hover: hover) {
+  .cta-line:hover::after {
+    transform: scaleX(0.35);
+  }
+}
+
+.label {
+  font-size: var(--t-label);
+  font-weight: 500;
+  line-height: 1.8;
+}
+
+.micro {
+  font-size: var(--t-micro);
+  line-height: 1.85;
+  color: var(--color-muted);
+}
+
+/* The only filled button on the site. */
+.btn-solid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: 52px;
+  background: var(--color-ink);
+  color: var(--color-ivory);
+  font-size: var(--t-label);
+  font-weight: 500;
+  border-radius: var(--radius);
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.btn-solid:hover:not(:disabled) {
+  opacity: 0.8;
+}
+.btn-solid:disabled {
+  background: var(--color-muted2);
+  cursor: not-allowed;
+}
+
+.btn-line {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 44px;
+  padding-inline: 18px;
+  border: var(--border-w) solid var(--color-line-strong);
+  border-radius: var(--radius);
+  font-size: var(--t-label);
+  font-weight: 500;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.btn-line:hover {
+  opacity: 0.6;
+}
+
+.field {
+  inline-size: 100%;
+  background: transparent;
+  border: 0;
+  border-block-end: var(--border-w) solid var(--color-line-strong);
+  border-radius: 0;
+  padding-block: 10px;
+  font-size: var(--t-body-s);
+  text-align: start;
+  color: var(--color-ink);
+  outline: none;
+}
+.field::placeholder {
+  color: var(--color-muted2);
+}
+.field:focus {
+  border-color: var(--color-gold);
+}
+
+/* Elevation is a material, not a shadow. */
+.elev {
+  background: var(--elev-bg);
+  backdrop-filter: var(--elev-blur);
+  -webkit-backdrop-filter: var(--elev-blur);
+}
+
+/* ─── crops ────────────────────────────────────────────────── */
+
+.crop-57 {
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  background: var(--color-linen);
+}
+.crop-45 {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--color-linen);
+}
+.crop-23 {
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: var(--color-linen);
+}
+.crop-1610 {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--color-linen);
+}
+
+/* ─── product grid ─────────────────────────────────────────── */
+
+.pgrid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  column-gap: var(--grid-gutter);
+  row-gap: var(--card-gap-y);
+}
+
+/* ─── rails ────────────────────────────────────────────────── */
+
+.rail {
+  display: flex;
+  gap: var(--grid-gutter);
+  overflow-x: auto;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+  padding-inline: var(--page-margin);
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+.rail > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+/* ─── drawer ───────────────────────────────────────────────── */
+
+.drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 70;
+  inline-size: min(440px, 100vw);
+  display: flex;
+  flex-direction: column;
+  /* --dir is 1 in LTR and -1 in RTL, so one rule sends the panel off-screen
+     past its own inline-end edge in both directions — no JS branch. */
+  transform: translateX(calc(var(--dir) * 100%));
+  visibility: hidden;
+  transition:
+    transform var(--dur-slow) var(--ease-drawer),
+    visibility 0s linear var(--dur-slow);
+}
+.drawer[data-open="true"] {
+  transform: translateX(0);
+  visibility: visible;
+  transition:
+    transform var(--dur-slow) var(--ease-drawer),
+    visibility 0s;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(26, 24, 21, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+.scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── misc ─────────────────────────────────────────────────── */
+
+.no-scroll {
+  overflow: hidden;
+}
+
+.fade-up {
+  animation: fadeUp var(--dur-slow) var(--ease) both;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.cols-1 {
+  --cols: 1;
+}
+.cols-2 {
+  --cols: 2;
+}
+
+@media (min-width: 768px) {
+  .md-cols-2 {
+    --cols: 2;
+  }
+  .md-cols-3 {
+    --cols: 3;
+  }
+  .md-cols-4 {
+    --cols: 4;
+  }
 }

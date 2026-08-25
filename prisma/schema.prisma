@@ -1,0 +1,204 @@
+// Lirisha — ليريشيا
+// Schema is hosting-agnostic. Dev/VPS run on SQLite; for Vercel/managed Postgres
+// switch the provider below to "postgresql" (see README → Deployment).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Catalogue
+// ─────────────────────────────────────────────────────────────
+
+model Product {
+  id       String @id @default(cuid())
+  slug     String @unique
+  /// Colourway lives in the product name (Totême convention):
+  /// "عباية ساتان مطرزة — رملي"
+  nameAr   String
+  nameEn   String
+  colorAr  String
+  colorEn  String
+  colorHex String @default("#E7E1D7")
+
+  /// Groups colourways of the same silhouette so the PDP can offer swatches
+  /// that navigate to a sibling product URL.
+  groupKey String?
+
+  descAr    String
+  descEn    String @default("")
+  detailsAr String @default("")
+  careAr    String @default("")
+
+  /// LYD, whole dinars. null → "السعر عند الطلب"
+  price Int?
+
+  category   String @default("abaya") // abaya | bisht | jalabiya | sheila
+  fabric     String @default("")      // ساتان | كريب | نيدا | شيفون | حرير | كتان
+  occasion   String @default("")      // يومي | مناسبات | عروس
+  embroidery String @default("")      // سادة | مطرز | تطريز يدوي | كريستال
+
+  /// JSON string arrays
+  sizes   String @default("[\"S\",\"M\",\"L\",\"XL\"]")
+  lengths String @default("[\"54\",\"56\",\"58\",\"60\"]")
+
+  isFeatured Boolean @default(false)
+  isNew      Boolean @default(false)
+  isActive   Boolean @default(true)
+  position   Int     @default(0)
+
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive])
+  @@index([groupKey])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url    String
+  width  Int    @default(1200)
+  height Int    @default(1680)
+  alt    String @default("")
+  /// front | back | three-quarter | fabric | detail | closure
+  kind   String @default("front")
+  /// tiny base64 blur placeholder
+  blur   String @default("")
+  position Int  @default(0)
+
+  @@index([productId, position])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Attribution + analytics
+// ─────────────────────────────────────────────────────────────
+
+model Visitor {
+  /// uuid stored in a first-party cookie (lir_vid), 1 year
+  id String @id
+
+  /// Resolved acquisition channel, sticky to first touch:
+  /// facebook | instagram | whatsapp | tiktok | google | referral | direct
+  channel     String  @default("direct")
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  referrer    String?
+  landingPath String  @default("/")
+  device      String  @default("desktop") // mobile | tablet | desktop
+  country     String?
+  locale      String  @default("ar")
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  events Event[]
+  orders Order[]
+
+  @@index([channel])
+  @@index([firstSeenAt])
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  visitorId String
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  /// page_view | product_view | add_to_cart | remove_from_cart | cart_open
+  /// | checkout_start | whatsapp_click | order_created | filter_apply | search
+  type      String
+  path      String?
+  productId String?
+  /// JSON blob — size, length, qty, orderRef, value…
+  meta      String?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([visitorId, createdAt])
+  @@index([productId, type])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Orders (created server-side, then handed to WhatsApp)
+// ─────────────────────────────────────────────────────────────
+
+model Order {
+  id  String @id @default(cuid())
+  /// Short human ref quoted in the WhatsApp message, e.g. LR-7K42
+  ref String @unique
+
+  visitorId String?
+  visitor   Visitor? @relation(fields: [visitorId], references: [id])
+
+  customerName String
+  phone        String
+  city         String
+  note         String?
+
+  /// Sum of priced items only, in LYD
+  subtotal      Int     @default(0)
+  hasQuoteItems Boolean @default(false)
+
+  /// pending | opened | confirmed | paid | shipped | delivered | cancelled
+  status           String    @default("pending")
+  whatsappOpenedAt DateTime?
+  confirmedAt      DateTime?
+
+  // Attribution snapshot, frozen at order time
+  channel     String  @default("direct")
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  referrer    String?
+  landingPath String?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([channel])
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  // snapshots so history survives catalogue edits
+  nameAr  String
+  colorAr String  @default("")
+  slug    String  @default("")
+  image   String  @default("")
+  price   Int?
+  size    String  @default("")
+  length  String  @default("")
+  qty     Int     @default(1)
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
