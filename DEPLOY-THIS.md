@@ -1,93 +1,163 @@
-# Shipping the real catalogue
+# Shipping the real catalogue, and turning on CD
 
-Two commits are ready and verified locally (21/21 end-to-end checks, lint,
-typecheck, build). The sandbox's git proxy won't push to
-`AbduMurad/Lirisha`, so they come to you as a bundle instead.
+Four commits are ready, verified locally: lint, typecheck, build, 21/21
+end-to-end assertions, and 14/14 on the deploy harness.
 
 | | |
 |---|---|
-| `fd6d055` | Stop hardcoding the Playwright browser path — this is the CI failure you hit |
-| `ae6b3df` | The nine real pieces, twenty-four frames, and the crop rules behind them |
+| `fd6d055` | Stop hardcoding the Playwright browser path — the CI failure you hit |
+| `ae6b3df` | Nine real pieces, 24 frames, and the crop rules behind them |
+| `31277c6` | This note |
+| `…` | Continuous deployment: push to `main` → GHCR → Falkenstein |
 
-## 1 · Push them
+## 0 · The one push I can't do for you
 
-From your clone of `Lirisha` (on `main`, at `c4bb184`):
+GitHub Actions runs *from* the repo, so it can only build commits that are
+already on GitHub — it can't reach into my sandbox to fetch these. The first
+push has to come from you. After that, every push deploys itself.
+
+The git proxy here refuses `AbduMurad/Lirisha` and named its own remedy:
+*"add the repository to the session's sources."* Do that in your client and I
+can push directly next time, and this step disappears. I have `GH_TOKEN` in my
+environment but haven't used it — writing to a repo the proxy just declined
+would be routing around the authorization boundary, not working within it.
+
+From your clone, on `main`, at `c4bb184`:
 
 ```bash
 git fetch /path/to/lirisha-catalogue.bundle HEAD:incoming
 git merge --ff-only incoming
 git branch -d incoming
-git push origin main
 ```
 
-`git log --oneline -3` should end `ae6b3df / fd6d055 / c4bb184`. CI will run
-lint, typecheck, build and the 21 assertions in `scripts/verify-flow.mjs`.
+**Don't push yet** — set up §1 first, or the first push builds an image the
+server can't pull.
 
-## 2 · Deploy
+## 1 · One-time setup (about five minutes)
+
+### Repository variables
+Settings → Secrets and variables → Actions → **Variables**
+
+| Name | Value |
+|---|---|
+| `SITE_URL` | `https://lirisha.abdumurad.com` |
+
+This one matters more than it looks. `NEXT_PUBLIC_SITE_URL` is baked into the
+bundle at build time, so if it's missing the build doesn't fail — it silently
+ships "استفسري عبر واتساب" links pointing at `localhost`. The workflow refuses
+to build without it.
+
+### Repository secrets
+Same page → **Secrets**
+
+| Name | How to get it |
+|---|---|
+| `DEPLOY_HOST` | `2.28.46.4` |
+| `SSH_PRIVATE_KEY` | the private half of the key already authorised for `root` on the box — paste the whole file, `BEGIN`/`END` lines included |
+| `SSH_KNOWN_HOSTS` | `ssh-keyscan -t ed25519 2.28.46.4` — paste the output line |
+
+`SSH_KNOWN_HOSTS` is not optional padding. Without a pinned host key the deploy
+would accept whatever answers on that address, and hand it a root credential.
+
+### GHCR visibility
+
+The package doesn't exist until the first build, so the order is slightly
+awkward:
+
+1. Push. The `image` job builds and publishes `ghcr.io/abdumurad/lirisha`.
+2. The `deploy` job **will fail** on `docker pull` — a new package is private,
+   and the server isn't logged in.
+3. Go to the package (your profile → Packages → `lirisha`) → Package settings →
+   Change visibility → **Public**.
+4. Actions → Deploy → *Re-run failed jobs*.
+
+Public because the image is ~750 MB and GitHub's free plan allows 500 MB of
+*private* package storage. Nothing secret is in it — the runner stage copies
+only `public`, `.next`, `prisma`, `scripts`; `ADMIN_PASSWORD` and `AUTH_SECRET`
+live in the server's `.env` and are injected at run time. If you'd rather keep
+it private, skip step 3 and instead run `docker login ghcr.io` once on the
+server with a read-only PAT.
+
+## 2 · The first deploy
+
+Push. Then watch Actions.
+
+```
+verify ─┐
+        ├─→ deploy
+image  ─┘
+```
+
+The first deploy swaps the hand-built `lirisha:local` container for the GHCR
+image. That leaves the old local image on the box untouched as a manual
+fallback, and it becomes the rollback target if anything goes wrong.
+
+**Then reseed once**, to replace the placeholder catalogue still sitting in the
+volume with the nine real pieces:
+
+Actions → **Deploy** → *Run workflow* → tick **reseed** → Run.
+
+Reseeding deletes every product and product image and writes the nine real
+ones. It leaves visitors, events and orders alone. It's deliberately not part
+of an ordinary deploy.
+
+## 3 · After that
+
+Push to `main`. That's the whole procedure.
+
+If a build boots but never becomes healthy, `docker/release.sh` rolls back to
+the previous image and fails the run — the shop keeps serving the last good
+build rather than a broken one. Detection takes about 90 s (compose's
+`start_period` plus a couple of intervals). To roll back deliberately, re-run
+an older Deploy run, or on the box:
 
 ```bash
-ssh root@2.28.46.4
-cd /opt/lirisha
-git pull
-docker compose --profile edge up -d --build
+APP_IMAGE=ghcr.io/abdumurad/lirisha:sha-<older-sha> bash docker/release.sh
 ```
 
-The container migrates itself on boot. It seeds **only a completely empty
-catalogue**, so the nine new pieces will *not* replace the old placeholder rows
-that are already in the volume. Reseed explicitly:
-
-```bash
-docker compose exec app node prisma/seed.mjs
-```
-
-That deletes every product and product image and writes the nine real pieces.
-It leaves visitors, events and orders alone.
-
-## 3 · Two things to do in the dashboard
+## 4 · Two things to do in the dashboard
 
 <https://lirisha.abdumurad.com/admin> — the password is `ADMIN_PASSWORD` in
-`/opt/lirisha/.env` on the server, and in the `SERVER-ACCESS.md` I sent you
-(that file is deliberately untracked — keep it out of the repo).
+`/opt/lirisha/.env`, and in the `SERVER-ACCESS.md` I sent you. That file is
+deliberately untracked; keep it out of the repo.
 
 1. **The WhatsApp number is still `218910000000`.** Every order hands off to
-   that number. Set the real one at `/admin/settings` before the site is shown
-   to anyone.
-2. **Wipe the demo traffic.** The dashboard is currently full of 45 days of
-   invented visitors and orders so the charts had something to show:
+   that number. Set the real one at `/admin/settings` before anyone sees the
+   site.
+2. **Wipe the demo traffic.** The dashboard currently shows 45 days of invented
+   visitors and orders so the charts had something to render:
    ```bash
    docker compose exec app node scripts/seed-analytics.mjs --wipe
    ```
-   Do this before the first real customer arrives, or the funnel numbers are
-   fiction.
+   Do this before the first real customer, or the funnel numbers are fiction.
 
-## 4 · Prices
+## 5 · Prices and names
 
-Every piece reads **السعر عند الطلب**. That is deliberate — I don't know what
+Every piece reads **السعر عند الطلب**. That's deliberate — I don't know what
 these garments cost, and inventing figures for a shop taking real orders would
-have been worse than asking. Names, fabric and price are all editable at
-`/admin/products` and save as you type; the checkout, the WhatsApp message and
-the dashboard's revenue column all handle a mixed priced/on-request cart
-correctly.
+be worse than asking. Name, fabric and price are all editable at
+`/admin/products` and save as you type.
 
-The names themselves are my reading of the photographs — «عباية ميكادو بتطريز
-الشفق», «عباية الكريستال الفضي» and so on. The designer will have her own names
-for these pieces and can type them straight over mine.
+The names are my reading of the photographs — «عباية ميكادو بتطريز الشفق»,
+«عباية الكريستال الفضي». The designer will have her own names and can type them
+straight over mine.
 
-## 5 · What was left out
+## 6 · What was left out
 
-Thirteen of the forty-two images on the Facebook page are not product
-photography: Eid and Ramadan greeting cards, the logo lockups, a colour-palette
-board, a reels collage, and posts with large Arabic text burned into the image.
-They're excluded. If you want any of them for an About page, they're all still
-in `P:\Career\for-working\lirisha\assets` under their original numbers —
+Thirteen of the 42 Facebook images aren't product photography: Eid and Ramadan
+cards, logo lockups, a palette board, a reels collage, and posts with large
+Arabic text burned in. They're excluded but still in
+`P:\Career\for-working\lirisha\assets` under their original numbers —
 `lirisha-05, 06, 07, 08, 10, 11, 12, 13, 19, 26, 36, 37, 38`.
 
-## 6 · Still open
+## 7 · Still open
 
-- **2FA on the Hetzner account.** The SSH key I generated is root on a public
-  box; the account itself is still single-factor.
-- **`assets/lirisha-42 (1).jpg`** is a duplicate download — safe to delete.
-- Photography per piece is thin in places: `مِعطف عباية بقَصّة إنجليزية` has one
-  frame and `عباية سوداء بسليب مطرز` has two crops of a single photograph. A
-  back view and a fabric macro for each piece would do more for conversion than
-  any further code.
+- **2FA on the Hetzner account.** More pressing now: a GitHub secret can start
+  a root session on that box unattended. If you want to narrow that later,
+  create a `deploy` user in the `docker` group owning `/opt/lirisha`, set the
+  repo variable `DEPLOY_USER=deploy`, and swap the key — the workflow already
+  reads that variable and needs no other change.
+- `assets/lirisha-42 (1).jpg` is a duplicate download; safe to delete.
+- Photography is thin in places: the powder-blue coat has one frame, and the
+  black piece is two crops of a single photograph. A back view and a fabric
+  macro per piece would do more for conversion than any further code.

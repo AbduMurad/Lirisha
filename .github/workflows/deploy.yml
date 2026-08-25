@@ -1,0 +1,202 @@
+name: Deploy
+
+# Push to main → checks run, the image is built on a GitHub runner, and the box
+# in Falkenstein pulls it. The server no longer builds anything: `npm ci` once
+# died at 1 GB on GCP, and a CPX12 has 2 GB it would rather spend serving.
+#
+# One-time setup is in DEPLOY-THIS.md — three secrets, two variables, and the
+# GHCR package flipped to public. The half that runs on the server lives in
+# docker/release.sh so it can be read and run by hand.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reseed:
+        description: "DESTRUCTIVE — delete every product and reseed the catalogue"
+        type: boolean
+        default: false
+
+# Never cancel a deploy midway: a half-swapped container is worse than a queue.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── 1 · the same checks a pull request gets ──────────────────────
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  # ── 2 · build the image, in parallel with the checks ─────────────
+  # Both jobs read the same commit and `deploy` waits on both, so nothing
+  # unverified reaches the shop. Building alongside the tests rather than after
+  # them halves the wall-clock; the cost of a build that turns out to be
+  # unwanted is one tag in a free public registry.
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # NEXT_PUBLIC_SITE_URL is baked into the bundle at build time, so a
+      # missing value doesn't fail the build — it silently ships
+      # "استفسري عبر واتساب" links pointing at localhost. Fail here instead,
+      # loudly, where it costs nothing.
+      - name: Require SITE_URL
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::error::Repository variable SITE_URL is not set. Settings →" \
+                 "Secrets and variables → Actions → Variables →" \
+                 "SITE_URL = https://lirisha.abdumurad.com"
+            exit 1
+          fi
+          case "$SITE_URL" in
+            https://*) echo "building for $SITE_URL" ;;
+            *) echo "::error::SITE_URL must be an https:// origin, got '$SITE_URL'"; exit 1 ;;
+          esac
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL }}
+
+      - name: Publish the exact tag
+        id: tag
+        run: echo "image=${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      # A container that boots, migrates and answers /api/health, proven on the
+      # runner before the shop sees it. The entrypoint runs `prisma migrate
+      # deploy` and seeds an empty volume, so this exercises the real cold start.
+      - name: Smoke-test the image
+        env:
+          IMAGE: ${{ steps.tag.outputs.image }}
+        run: |
+          docker run -d --name smoke -p 3000:3000 \
+            -e ADMIN_PASSWORD=smoke \
+            -e AUTH_SECRET=smoke-secret-long-enough-for-hmac \
+            "$IMAGE"
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "healthy after ${i}s"
+              break
+            fi
+            if [ "$i" -eq 90 ]; then
+              echo "::error::image never became healthy"
+              docker logs smoke
+              exit 1
+            fi
+            sleep 1
+          done
+          curl -fsS -o /dev/null -w 'shop  %{http_code}\n' http://localhost:3000/shop
+          curl -fsS -o /dev/null -w 'admin %{http_code}\n' http://localhost:3000/admin/login
+          docker rm -f smoke
+
+  # ── 3 · release ──────────────────────────────────────────────────
+  deploy:
+    needs: [verify, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Secrets are read through env, never interpolated into the script body:
+      # an SSH private key is multi-line, and `[ -n "${{ secrets.KEY }}" ]`
+      # would splice those newlines straight into the shell.
+      - name: Preflight
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          missing=
+          [ -n "$SSH_PRIVATE_KEY" ] || missing="$missing SSH_PRIVATE_KEY"
+          [ -n "$SSH_KNOWN_HOSTS" ] || missing="$missing SSH_KNOWN_HOSTS"
+          [ -n "$DEPLOY_HOST" ]     || missing="$missing DEPLOY_HOST"
+          if [ -n "$missing" ]; then
+            echo "::error::missing repository secrets:$missing — see DEPLOY-THIS.md"
+            exit 1
+          fi
+
+      # The host key is pinned from a secret rather than accepted on sight.
+      # StrictHostKeyChecking=no would hand this deploy — and the root
+      # credential it carries — to anything that can answer on that address.
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      - name: Release
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ vars.DEPLOY_USER || 'root' }}
+          APP_IMAGE: ${{ needs.image.outputs.tag }}
+          RESEED: ${{ inputs.reseed && 'true' || 'false' }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
+              "$SSH_USER@$HOST" \
+              "APP_IMAGE='$APP_IMAGE' RESEED='$RESEED' GIT_SHA='$GIT_SHA' bash -s" \
+              < docker/release.sh
+
+      - name: Confirm the public origin is serving
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          for i in $(seq 1 10); do
+            code="$(curl -fsS -o /dev/null -w '%{http_code}' "$SITE_URL/api/health" || echo 000)"
+            if [ "$code" = "200" ]; then
+              echo "live: $SITE_URL"
+              exit 0
+            fi
+            echo "attempt $i → HTTP $code"
+            sleep 6
+          done
+          echo "::error::$SITE_URL/api/health never returned 200"
+          exit 1

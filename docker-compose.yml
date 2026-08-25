@@ -34,7 +34,10 @@ services:
       - "${APP_PORT:-3000}:3000"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/health"]
-      interval: 30s
+      # start_period covers migrate + first boot; after that, poll often. The
+      # deploy waits on this verdict before it will roll back, so a slow
+      # interval is time the shop spends serving a broken build.
+      interval: 10s
       timeout: 5s
       start_period: 40s
       retries: 3

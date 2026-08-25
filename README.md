@@ -100,9 +100,8 @@ Point an A record at the box, set `DOMAIN` and `TLS_EMAIL`, and Caddy gets the
 certificate on first request. On a public server, comment out the `ports:`
 block under `app` so nothing is reachable except through TLS.
 
-Updating is `git pull && docker compose up -d --build`. No registry needed —
-`.github/workflows/docker.yml` publishes to GHCR if you'd rather the server
-pull a prebuilt image, but for one box building in place is simpler.
+That is the by-hand path. In practice pushing to `main` deploys — see
+**Continuous deployment** below.
 
 | | |
 |---|---|
@@ -207,6 +206,59 @@ against a seeded database and runs `scripts/verify-flow.mjs` — 21 assertions
 over the path that actually earns money: attribution → product view → cart →
 order row → WhatsApp hand-off, including the case where the customer's
 ad-blocker eats `/api/track`.
+
+## Continuous deployment
+
+`.github/workflows/deploy.yml`, on every push to `main`:
+
+```
+verify ─┐                          (calls ci.yml — same gate a PR gets)
+        ├─→ deploy → ssh → docker/release.sh
+image  ─┘                          (build → GHCR → smoke-test the container)
+```
+
+`verify` and `image` run in parallel and `deploy` waits on both, so nothing
+unverified reaches the shop while the build still overlaps the tests. The
+server stops building anything: a CPX12 has 2 GB it would rather spend serving,
+and `npm ci` already died at 1 GB once.
+
+**What runs on the box** is `docker/release.sh`, piped over SSH rather than
+inlined in the workflow so it can be read, linted, and run by hand:
+
+```bash
+APP_IMAGE=ghcr.io/abdumurad/lirisha:sha-<sha> bash docker/release.sh
+```
+
+It records what is currently serving, pulls the exact tag, swaps the container,
+and waits on compose's healthcheck. **If the new build never becomes healthy it
+rolls back to the previous image** and exits non-zero — the shop keeps serving
+the last good build instead of a broken one. It also syncs the checkout to the
+deployed commit so `docker-compose.yml` matches the image, unless the tree has
+local edits, in which case it warns and leaves them alone (the `ports:` block
+is commented out by hand on a public server; reverting that would republish the
+app on `:3000`).
+
+Deploys pin `sha-<commit>`, never `latest` — two deploys of a moving tag are
+indistinguishable, and rolling back to one is guesswork.
+
+### Testing the deploy without a server
+
+```bash
+bash scripts/test-release.sh     # needs docker; leaves nothing behind
+```
+
+Stands up a throwaway registry, pushes stand-in images that honour the same
+`/api/health` contract, and drives cold start → rolling upgrade → failed deploy
+→ rollback → pruning. Deploy logic is otherwise only testable in production,
+and the failure path is the one you least want to meet live. This is what
+caught `${APP_IMAGE%%:*}` stripping a registry port and silently disabling
+image pruning.
+
+### Reseeding
+
+Replacing the catalogue is destructive, so it is never part of an ordinary
+deploy. Run the workflow manually — Actions → Deploy → *Run workflow* — and
+tick **reseed**.
 
 ## How attribution works
 
