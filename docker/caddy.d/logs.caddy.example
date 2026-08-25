@@ -1,0 +1,40 @@
+# Puts the log viewer on a subdomain instead of behind an SSH tunnel.
+#
+# Only do this with authentication on. These logs carry customer names, phone
+# numbers and cities, and the container has the host's Docker socket. Enabling
+# this file without DOZZLE_AUTH_PROVIDER=simple publishes all of that.
+#
+#   1 · point an A record at the box:   logs.lirisha.abdumurad.com → 2.28.46.4
+#   2 · create a user (writes to the container's /data volume):
+#
+#         docker compose --profile tools run --rm --no-deps -T logs \
+#           generate abdu --password 'a-long-random-one' --name Abdu > users.yml
+#         docker compose --profile tools cp users.yml logs:/data/users.yml
+#         rm users.yml
+#
+#   3 · set DOZZLE_AUTH_PROVIDER=simple in .env
+#   4 · cp this file to logs.caddy, edit the hostname below
+#   5 · docker compose --profile edge --profile tools up -d
+#       docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+#
+# Verify before you walk away — an unauthenticated instance answers 200 on
+# /api/version, an authenticated one answers 401:
+#
+#   curl -o /dev/null -w '%{http_code}\n' https://logs.lirisha.abdumurad.com/api/version
+#
+# *.caddy in this directory is gitignored, so enabling it won't dirty the
+# checkout or block a deploy's config sync.
+
+logs.lirisha.abdumurad.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	reverse_proxy logs:8080
+}

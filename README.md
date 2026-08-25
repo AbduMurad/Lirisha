@@ -254,6 +254,41 @@ and the failure path is the one you least want to meet live. This is what
 caught `${APP_IMAGE%%:*}` stripping a registry port and silently disabling
 image pruning.
 
+## Seeing what the box is doing
+
+The `tools` profile adds [Dozzle](https://dozzle.dev) — container logs, status
+and per-container CPU/memory in a browser, so "why did that order not arrive"
+doesn't begin with an SSH session and `docker logs --tail`.
+
+```bash
+docker compose --profile edge --profile tools up -d
+```
+
+Measured at **9.6 MB resident** (capped at 128 MB), which matters on a 2 GB box.
+The Docker socket is mounted read-only and `--enable-actions` / `--enable-shell`
+are left off, so it can observe containers but not touch them. It is *not*
+removed by a deploy: `release.sh` runs `up --remove-orphans` with only the
+`edge` profile, and Compose leaves profile-disabled services alone (verified).
+
+**It binds to loopback**, because these logs carry customer names, phone numbers
+and cities. Reach it through a tunnel:
+
+```bash
+ssh -N -L 8080:127.0.0.1:8080 root@<host>     # → http://localhost:8080
+```
+
+To put it on a subdomain instead, see `docker/caddy.d/logs.caddy.example` —
+it needs `DOZZLE_AUTH_PROVIDER=simple` and a generated users file. Dozzle's
+own `--help` claims only `forward-proxy` is supported; that text is stale, and
+`simple` does gate the API (`/api/version` answers 200 unauthenticated, 401
+with it). Files in `docker/caddy.d/` are gitignored, so enabling a route won't
+dirty the checkout and block a deploy's config sync.
+
+One thing this deliberately does not do: **tell you the site is down**. A log
+viewer on the box dies with the box. An external check against
+`https://lirisha.abdumurad.com/api/health` — UptimeRobot's free tier is enough —
+is what actually pages you.
+
 ### Reseeding
 
 Replacing the catalogue is destructive, so it is never part of an ordinary

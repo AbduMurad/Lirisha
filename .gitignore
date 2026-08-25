@@ -58,3 +58,6 @@ Dockerfile.verify
 
 # operational notes — never commit these
 SERVER-ACCESS.md
+
+# opt-in Caddy site blocks, enabled per-server and kept out of git
+docker/caddy.d/*.caddy

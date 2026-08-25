@@ -58,8 +58,54 @@ services:
       - "443:443/udp"
     volumes:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Opt-in extra site blocks. Empty by default; the Caddyfile's import glob
+      # tolerates matching nothing.
+      - ./docker/caddy.d:/etc/caddy/conf.d:ro
       - caddy-data:/data
       - caddy-config:/config
+
+  # Container logs and stats in a browser, so "why did that order not arrive"
+  # doesn't start with an SSH session and `docker logs --tail`. ~10 MB resident,
+  # measured — it does not meaningfully compete with the app for the box's 2 GB.
+  #
+  #   docker compose --profile edge --profile tools up -d
+  #
+  # Bound to loopback on purpose. These logs carry customer names, phone numbers
+  # and cities, and the socket exposes every container on the host, so it is not
+  # something to publish by default. Reach it over an SSH tunnel:
+  #
+  #   ssh -N -L 8080:127.0.0.1:8080 root@<host>   → http://localhost:8080
+  #
+  # To put it on a subdomain instead, set DOZZLE_AUTH_PROVIDER=simple with a
+  # users file (see README → Seeing what the box is doing) and add the route to
+  # docker/Caddyfile. Never expose it with auth left at "none".
+  logs:
+    profiles: ["tools"]
+    image: amir20/dozzle:v10
+    restart: unless-stopped
+    environment:
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_LEVEL: ${DOZZLE_LEVEL:-info}
+      # "none" is only safe while this is loopback-only. Set to "simple" before
+      # putting it behind Caddy.
+      DOZZLE_AUTH_PROVIDER: ${DOZZLE_AUTH_PROVIDER:-none}
+      # Empty shows every container on the host. Narrow it with e.g.
+      # label=com.docker.compose.project=lirisha
+      DOZZLE_FILTER: ${DOZZLE_FILTER:-}
+    volumes:
+      # Read-only, and --enable-actions/--enable-shell are left off, so this can
+      # observe the host's containers but not touch them.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - dozzle-data:/data
+    ports:
+      - "${DOZZLE_BIND:-127.0.0.1:8080}:8080"
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
 
   # Only needed once SQLite stops being enough. Start with:
   #   docker compose --profile postgres up -d
@@ -85,4 +131,5 @@ volumes:
   lirisha-data:
   caddy-data:
   caddy-config:
+  dozzle-data:
   pg-data:

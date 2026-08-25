@@ -23,3 +23,10 @@
 
 	reverse_proxy app:3000
 }
+
+# Optional extra sites, none by default. A glob matching nothing is valid Caddy
+# (checked), so this line is inert until you put a file there — see
+# docker/caddy.d/logs.caddy.example for putting the log viewer on a subdomain.
+# Files here are gitignored, so enabling one won't dirty the checkout and block
+# a deploy's config sync.
+import /etc/caddy/conf.d/*.caddy

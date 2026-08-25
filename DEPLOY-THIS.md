@@ -115,6 +115,27 @@ an older Deploy run, or on the box:
 APP_IMAGE=ghcr.io/abdumurad/lirisha:sha-<older-sha> bash docker/release.sh
 ```
 
+## 3b · Seeing what the box is doing
+
+Instead of Dokploy — which wants 2 GB and ports 80/443 the box hasn't got
+spare — the `tools` profile adds a log and stats viewer at 9.6 MB:
+
+```bash
+cd /opt/lirisha
+docker compose --profile edge --profile tools up -d
+ssh -N -L 8080:127.0.0.1:8080 root@2.28.46.4     # → http://localhost:8080
+```
+
+Container logs, status, and per-container CPU/memory — which is also how you'll
+see whether 2 GB is actually holding up. It binds to loopback because the logs
+carry customer names and phone numbers; `docker/caddy.d/logs.caddy.example` has
+the subdomain route if you want it on a phone, and it requires auth to be on.
+
+A deploy won't remove it — verified, not assumed.
+
+**It cannot tell you the site is down**, because it dies with the box. Point
+UptimeRobot's free tier at `https://lirisha.abdumurad.com/api/health` for that.
+
 ## 4 · Two things to do in the dashboard
 
 <https://lirisha.abdumurad.com/admin> — the password is `ADMIN_PASSWORD` in
