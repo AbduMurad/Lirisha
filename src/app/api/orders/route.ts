@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { buildOrderMessage, whatsappUrl } from "@/lib/whatsapp";
+import { resolveChannel, resolveDevice } from "@/lib/attribution";
 import { VISITOR_COOKIE } from "@/proxy";
 import type { CartLine } from "@/lib/types";
 
@@ -79,7 +80,24 @@ export async function POST(req: NextRequest) {
   const hasQuoteItems = lines.some((l) => l.price === null);
 
   const vid = req.cookies.get(VISITOR_COOKIE)?.value ?? null;
-  const visitor = vid ? await prisma.visitor.findUnique({ where: { id: vid } }) : null;
+  let visitor = vid ? await prisma.visitor.findUnique({ where: { id: vid } }) : null;
+
+  // The cookie is issued by the proxy, but the Visitor row is only written by
+  // /api/track — which an ad-blocker or a disabled-JS session may never reach.
+  // Create it here rather than dropping the order's attribution (or, worse,
+  // violating the Event foreign key and 500-ing at checkout).
+  if (vid && !visitor) {
+    const referrer = req.headers.get("referer");
+    visitor = await prisma.visitor.create({
+      data: {
+        id: vid,
+        channel: resolveChannel(null, referrer, req.nextUrl.hostname),
+        referrer,
+        landingPath: "/",
+        device: resolveDevice(req.headers.get("user-agent")),
+      },
+    });
+  }
 
   // Collision-safe ref
   let ref = makeRef();
@@ -121,10 +139,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (vid) {
+  if (visitor) {
     await prisma.event.create({
       data: {
-        visitorId: vid,
+        visitorId: visitor.id,
         type: "order_created",
         meta: JSON.stringify({ ref, subtotal, items: lines.length }),
       },

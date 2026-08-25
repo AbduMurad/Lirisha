@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Emits .next/standalone — a self-contained server with only the traced
+  // dependencies, which is what the Docker image ships.
+  output: "standalone",
+
   images: {
     // Product photography is portrait and served from /public. These are the
     // only widths the grid ever requests, which keeps the srcset short.

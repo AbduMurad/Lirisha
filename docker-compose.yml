@@ -1,0 +1,85 @@
+# Lirisha — single-box deployment.
+#
+#   local        docker compose up -d --build          → http://localhost:3000
+#   on a server  docker compose --profile edge up -d    → Caddy terminates TLS
+#                                                         for $DOMAIN on 80/443
+#
+# SQLite lives on the `lirisha-data` volume and is the default: this shop's
+# traffic does not justify a second container. When it does, start the
+# `postgres` profile and point DATABASE_URL at it (see README → Deployment).
+
+name: lirisha
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    image: ${APP_IMAGE:-lirisha:local}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-file:/data/lirisha.db}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-218910000000}
+      SEED_ON_START: ${SEED_ON_START:-auto}
+    volumes:
+      - lirisha-data:/data
+    ports:
+      # Published only for the local/no-proxy case. Behind Caddy this is
+      # unnecessary — comment it out on a public server so the app is not
+      # reachable except through TLS.
+      - "${APP_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  caddy:
+    profiles: ["edge"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env, e.g. lirisha.ly}
+      TLS_EMAIL: ${TLS_EMAIL:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  # Only needed once SQLite stops being enough. Start with:
+  #   docker compose --profile postgres up -d
+  # then set DATABASE_URL=postgresql://lirisha:...@db:5432/lirisha
+  # and switch the provider in prisma/schema.prisma.
+  db:
+    profiles: ["postgres"]
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lirisha
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lirisha}
+      POSTGRES_DB: lirisha
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lirisha"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  lirisha-data:
+  caddy-data:
+  caddy-config:
+  pg-data:

@@ -1,0 +1,28 @@
+node_modules
+.next
+.git
+.github
+out
+build
+
+# generated at build time inside the image
+src/generated
+
+# never ship the local database or local secrets
+prisma/*.db
+prisma/*.db-journal
+.env
+.env.*
+!.env.example
+
+# tooling noise
+.agents
+.claude
+npm-debug.log*
+.DS_Store
+Dockerfile
+docker-compose*.yml
+README.md
+DESIGN.md
+PROJECT-BRIEF.md
+docs

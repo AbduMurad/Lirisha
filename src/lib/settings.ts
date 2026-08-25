@@ -11,10 +11,15 @@ export const DEFAULTS = {
 export type SettingKey = keyof typeof DEFAULTS;
 
 export async function getSettings(): Promise<Record<SettingKey, string>> {
-  const rows = await prisma.setting.findMany();
   const out = { ...DEFAULTS } as Record<SettingKey, string>;
-  for (const r of rows) {
-    if (r.key in out) out[r.key as SettingKey] = r.value;
+  try {
+    const rows = await prisma.setting.findMany();
+    for (const r of rows) {
+      if (r.key in out) out[r.key as SettingKey] = r.value;
+    }
+  } catch {
+    // The header and footer are not worth a 500. If the database is briefly
+    // unreachable the storefront still renders with the compiled-in defaults.
   }
   return out;
 }

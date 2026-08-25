@@ -101,7 +101,43 @@ check("confirmation shows the reference", (await page.textContent("body")).inclu
 const fbOrders = await prisma.order.count({ where: { channel: "facebook" } });
 check("facebook orders visible to the dashboard query", fbOrders > 0, `${fbOrders} order(s)`);
 
-// 6 · admin is actually protected
+// 6 · a customer whose ad-blocker eats /api/track must still be able to order.
+//     The proxy issues the cookie but no Visitor row exists, which used to
+//     violate the Event foreign key and 500 the checkout.
+const blocked = await browser.newContext({
+  extraHTTPHeaders: { referer: "https://www.instagram.com/" },
+});
+const bp = await blocked.newPage();
+await bp.route("**/api/track", (r) => r.abort());
+await bp.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+const priced = await prisma.product.findFirst({ where: { price: { not: null }, isActive: true } });
+const blockedRes = await bp.evaluate(async (productId) => {
+  const r = await fetch("/api/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      items: [{ productId, size: "M", length: "56", qty: 1 }],
+      customer: { name: "بدون تتبع", phone: "0915556666", city: "مصراتة" },
+    }),
+  });
+  return { status: r.status, body: await r.json().catch(() => null) };
+}, priced.id);
+
+check("order succeeds with tracking blocked", blockedRes.status === 200, `HTTP ${blockedRes.status}`);
+const blockedOrder = blockedRes.body?.ref
+  ? await prisma.order.findUnique({ where: { ref: blockedRes.body.ref } })
+  : null;
+check(
+  "attribution recovered from the referer header",
+  blockedOrder?.channel === "instagram",
+  blockedOrder?.channel ?? "—",
+);
+if (blockedOrder) await prisma.order.delete({ where: { id: blockedOrder.id } });
+if (blockedOrder?.visitorId)
+  await prisma.visitor.delete({ where: { id: blockedOrder.visitorId } }).catch(() => {});
+await blocked.close();
+
+// 7 · admin is actually protected
 const anon = await browser.newContext();
 const anonPage = await anon.newPage();
 const res = await anonPage.goto(`${BASE}/admin`, { waitUntil: "domcontentloaded" });

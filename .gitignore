@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — real values never, the template always
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -50,3 +51,7 @@ src/generated
 # Prisma re-injects these on every `prisma generate`
 .agents/
 .claude/skills/prisma-*
+
+# local docker verification artefacts
+Dockerfile.verify
+.sandbox-ca.crt

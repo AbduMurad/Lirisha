@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # CI runs against a throwaway SQLite file. Nothing here is a real secret;
+      # production values live in the host's environment.
+      DATABASE_URL: file:./ci.db
+      ADMIN_PASSWORD: ci-password
+      AUTH_SECRET: ci-secret-not-used-anywhere-real
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npx next build
+
+      # The end-to-end check is the one that actually protects the money path:
+      # attribution → cart → order row → WhatsApp hand-off. It needs a seeded
+      # database and a running server.
+      - name: Prepare database
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed
+          npm run assets:placeholders
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start server
+        run: |
+          npx next start -p 3000 &
+          npx wait-on http://localhost:3000 -t 60000
+
+      - name: Verify order + attribution flow
+        run: node scripts/verify-flow.mjs
