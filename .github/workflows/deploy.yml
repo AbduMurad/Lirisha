@@ -25,7 +25,8 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # No IMAGE_NAME here on purpose: github.repository is mixed-case and using it
+  # raw is what broke the smoke test. The image job resolves it once, lowercased.
 
 jobs:
   # ── 1 · the same checks a pull request gets ──────────────────────
@@ -44,7 +45,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      tag: ${{ steps.tag.outputs.image }}
+      tag: ${{ steps.img.outputs.image }}
 
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +69,28 @@ jobs:
             *) echo "::error::SITE_URL must be an https:// origin, got '$SITE_URL'"; exit 1 ;;
           esac
 
+      # OCI repository names must be lowercase, but github.repository keeps the
+      # owner's capitalisation — "AbduMurad/Lirisha". docker/metadata-action
+      # lowercases internally, so the push succeeds while every hand-built
+      # reference to the same image dies with "invalid reference format". One
+      # source of truth here, used for the build tags, the smoke test and the
+      # deploy alike.
+      - name: Resolve the image name
+        id: img
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          name="${REGISTRY}/$(printf '%s' "$REPO" | tr '[:upper:]' '[:lower:]')"
+          case "$name" in
+            *[A-Z]*)
+              echo "::error::image name is still mixed-case after lowercasing: $name"
+              exit 1
+              ;;
+          esac
+          echo "name=$name"                    >> "$GITHUB_OUTPUT"
+          echo "image=$name:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "resolved: $name:sha-${GITHUB_SHA}"
+
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
@@ -81,7 +104,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ steps.img.outputs.name }}
           tags: |
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
@@ -98,16 +121,12 @@ jobs:
           build-args: |
             NEXT_PUBLIC_SITE_URL=${{ vars.SITE_URL }}
 
-      - name: Publish the exact tag
-        id: tag
-        run: echo "image=${REGISTRY}/${IMAGE_NAME}:sha-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-
       # A container that boots, migrates and answers /api/health, proven on the
       # runner before the shop sees it. The entrypoint runs `prisma migrate
       # deploy` and seeds an empty volume, so this exercises the real cold start.
       - name: Smoke-test the image
         env:
-          IMAGE: ${{ steps.tag.outputs.image }}
+          IMAGE: ${{ steps.img.outputs.image }}
         run: |
           docker run -d --name smoke -p 3000:3000 \
             -e ADMIN_PASSWORD=smoke \
