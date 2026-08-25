@@ -20,7 +20,6 @@ export function Header({ announcement }: { announcement: string }) {
   const { count, open } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [menu, setMenu] = useState(false);
 
   useEffect(() => {
     let last = window.scrollY;
@@ -93,33 +92,9 @@ export function Header({ announcement }: { announcement: string }) {
             >
               الحقيبة{count > 0 ? ` (${count})` : ""}
             </button>
-            <button
-              onClick={() => setMenu((v) => !v)}
-              className="label hov md:hidden"
-              aria-expanded={menu}
-            >
-              {menu ? "إغلاق" : "القائمة"}
-            </button>
           </div>
         </div>
 
-        {menu && (
-          <nav className="elev hair-t md:hidden">
-            <div className="container-l flex flex-col" style={{ paddingBlock: 8 }}>
-              {NAV.map((n) => (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  className="hair label"
-                  style={{ paddingBlock: 14 }}
-                  onClick={() => setMenu(false)}
-                >
-                  {n.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
-        )}
       </header>
     </>
   );

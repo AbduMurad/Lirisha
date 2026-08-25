@@ -97,10 +97,13 @@ export const CATALOGUE = [
       "ساتان شمبانيا بانسدال هادئ، وتطريز فضّي مركّز على أطراف الأكمام والحافة الأمامية. البساطة هنا مقصودة.",
     detailsAr:
       "ساتان بلمعة ناعمة. تطريز على أطراف الأكمام بشفافية خفيفة. قَصّة مفتوحة بحزام داخلي.",
+    // Led by the worn frame, not the hanger. Baymard's apparel testing is blunt
+    // about this — "without the model it's hard to picture it" — and the first
+    // frame is both the card image and the PDP hero, so it does the most work.
     frames: [
-      { src: "lirisha-29", kind: "front", top: 0.0, x: 0.5 },
-      { src: "lirisha-41", kind: "three-quarter", top: 0.22, x: 0.55 },
+      { src: "lirisha-41", kind: "front", top: 0.22, x: 0.55 },
       { src: "lirisha-39", kind: "three-quarter", top: 0.0, x: 0.5 },
+      { src: "lirisha-29", kind: "three-quarter", top: 0.0, x: 0.5 },
       { src: "lirisha-28", kind: "fabric", top: 0.0, x: 0.5 },
       { src: "lirisha-35", kind: "detail", top: 0.0, x: 0.42 },
     ],

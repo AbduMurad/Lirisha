@@ -69,32 +69,45 @@ export function ProductCard({
           </span>
         )}
 
-        {/* hairline pagination — hover only */}
+        {/* Hairline pagination. Visible at rest, not hover-only: Baymard's
+            testing is explicit that the existence of further images has to be
+            communicated, and that "completely subtle approaches" fail. Quiet
+            at rest, definite on hover.
+            The active mark tracks the image actually showing — it used to be
+            hardcoded to index 1, so a card at rest pointed at a frame it
+            wasn't displaying. */}
         {images.length > 1 && (
           <div
             className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-2 transition-opacity duration-300"
-            style={{ opacity: hover ? 1 : 0 }}
+            style={{ opacity: hover ? 1 : 0.55 }}
           >
             {images.slice(0, 5).map((im, i) => (
               <span
                 key={im.id}
-                className="h-px w-5"
-                style={{ background: i === 1 ? "#1A1815" : "#8C8378" }}
+                className="h-px w-5 transition-colors duration-300"
+                style={{ background: i === (hover && second ? 1 : 0) ? "#1A1815" : "#B7ADA0" }}
               />
             ))}
           </div>
         )}
       </div>
 
-      <div className="mt-2">
+      {/* Three elements, each visually distinct so the grid can be scanned
+          down a column rather than read card by card — the second of Baymard's
+          two list-item principles, which 64% of sites get wrong. Same fields on
+          every card, in the same order, is the first. */}
+      <div className="mt-3">
         <h3
-          className="font-normal text-charcoal"
-          style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h4)", lineHeight: 1.7 }}
+          className="font-normal text-ink"
+          style={{ fontFamily: "var(--font-heading)", fontSize: "var(--t-h4)", lineHeight: 1.55 }}
         >
           {product.nameAr}
-          {product.colorAr ? <span className="text-muted"> — {product.colorAr}</span> : null}
         </h3>
-        <p className="label num mt-[2px] text-muted">{formatPrice(product.price)}</p>
+        <p className="mt-1 flex items-baseline gap-2" style={{ fontSize: "var(--t-body-s)" }}>
+          {product.colorAr && <span className="text-muted">{product.colorAr}</span>}
+          {product.colorAr && <span className="text-muted2">·</span>}
+          <span className="num text-ink2">{formatPrice(product.price)}</span>
+        </p>
       </div>
     </Link>
   );

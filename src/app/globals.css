@@ -51,16 +51,20 @@
   --u: clamp(1px, 0.04px + 0.0667vw, 1.4px);
 
   /* Type scale (px @1500). Arabic line-heights run ~+0.2 over Latin. */
-  --t-micro: 0.6875rem;
-  --t-label: 0.75rem;
-  --t-body-s: 0.875rem;
-  --t-body: 1rem;
-  --t-body-l: 1.125rem;
-  --t-h4: 1.25rem;
-  --t-h3: 1.5rem;
-  --t-h2: 2rem;
-  --t-h1: 2.5rem;
-  --t-display: 3rem;
+  /* Scaled up about a step. The old sizes were tuned for Reem Kufi, a wide
+     geometric Kufi; Amiri and Tajawal both carry noticeably smaller apparent
+     size at the same px, so matching the old numbers made the page read
+     smaller than before rather than the same. */
+  --t-micro: 0.75rem;
+  --t-label: 0.8125rem;
+  --t-body-s: 0.9375rem;
+  --t-body: 1.0625rem;
+  --t-body-l: 1.1875rem;
+  --t-h4: 1.375rem;
+  --t-h3: 1.625rem;
+  --t-h2: 2.125rem;
+  --t-h1: 2.625rem;
+  --t-display: 3.25rem;
   /* The one genuinely large size on the site. Fluid so the Ruqaa hand keeps
      its proportion from a 390px phone to a 1600px desktop. */
   --t-hero: clamp(2.6rem, 5.6vw, 4.9rem);

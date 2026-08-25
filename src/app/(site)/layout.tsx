@@ -3,6 +3,7 @@ import { CartProvider } from "@/components/CartProvider";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { CartDrawer } from "@/components/site/CartDrawer";
+import { BottomNav } from "@/components/site/BottomNav";
 import { PageView } from "@/components/site/PageView";
 import { getSettings } from "@/lib/settings";
 
@@ -21,7 +22,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <PageView />
       </Suspense>
       <Header announcement={s.announcement} />
-      <main>{children}</main>
+      {/* The bar is fixed, so the page needs the height back at the end or
+          the footer's last row sits under it. */}
+      <main style={{ paddingBlockEnd: "calc(56px + env(safe-area-inset-bottom, 0px))" }} className="md:!pb-0">
+        {children}
+      </main>
       <Footer
         whatsappNumber={s.whatsappNumber}
         instagram={s.instagram}
@@ -29,6 +34,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         city={s.city}
       />
       <CartDrawer />
+      <BottomNav />
     </CartProvider>
   );
 }
