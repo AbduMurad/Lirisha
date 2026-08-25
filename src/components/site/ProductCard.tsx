@@ -61,7 +61,10 @@ export function ProductCard({
         )}
 
         {product.isNew && (
-          <span className="micro absolute inset-inline-start-0 top-0 m-3 bg-ivory/90 px-2 py-[2px] tracking-normal text-ink">
+          <span
+            className="micro absolute bg-ivory/90 px-2 py-[2px] text-ink"
+            style={{ insetInlineStart: 12, insetBlockStart: 12 }}
+          >
             جديد
           </span>
         )}
