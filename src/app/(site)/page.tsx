@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/site/ProductCard";
-import { EDITORIAL_IMAGES, HERO_VIDEO } from "@/lib/editorial";
+import { EDITORIAL_IMAGES, HERO_SLIDES, HERO_VIDEO } from "@/lib/editorial";
+import { HeroSlides } from "@/components/site/HeroSlides";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,6 @@ export default async function HomePage() {
     getProducts({ category: "abaya" }, 6),
   ]);
 
-  const { heroWide, heroPortrait } = EDITORIAL_IMAGES;
 
   return (
     <>
@@ -28,44 +28,31 @@ export default async function HomePage() {
         className="relative"
         style={{ blockSize: "calc(100svh - var(--header-h) - 40px)", minBlockSize: 460 }}
       >
-        {/* Art-directed rather than one frame stretched two ways: a wide band
-            of drape for desktop, the whole portrait on a phone. The video, when
-            it exists, replaces only the desktop frame — a few MB of autoplay
-            on Libyan mobile data is a cost the customer didn't ask for. */}
-        <Image
-          src={heroPortrait.url}
-          alt="مجموعة ليريشيا"
-          fill
-          priority
-          sizes="100vw"
-          placeholder="blur"
-          blurDataURL={heroPortrait.blur}
-          className="object-cover md:hidden"
-        />
-        <Image
-          src={heroWide.url}
-          alt="مجموعة ليريشيا"
-          fill
-          priority
-          sizes="100vw"
-          placeholder="blur"
-          blurDataURL={heroWide.blur}
-          className="hidden object-cover md:block"
-        />
-        {HERO_VIDEO && (
-          <video
-            className="absolute inset-0 hidden size-full object-cover md:block"
-            poster={heroWide.url}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-hidden
-          >
-            <source src={HERO_VIDEO.mp4} type="video/mp4" />
-            {HERO_VIDEO.webm && <source src={HERO_VIDEO.webm} type="video/webm" />}
-          </video>
+        {/* Stills until the reels are exported and cut into a loop. When
+            HERO_VIDEO lands it takes the desktop frame and the slideshow keeps
+            phones, which is the same split the video was always going to use —
+            so turning it on is one file and no restructuring. */}
+        {HERO_VIDEO ? (
+          <>
+            <video
+              className="absolute inset-0 hidden size-full object-cover md:block"
+              poster={HERO_SLIDES[0]?.wide.url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-hidden
+            >
+              <source src={HERO_VIDEO.mp4} type="video/mp4" />
+              {HERO_VIDEO.webm && <source src={HERO_VIDEO.webm} type="video/webm" />}
+            </video>
+            <div className="md:hidden">
+              <HeroSlides slides={HERO_SLIDES} />
+            </div>
+          </>
+        ) : (
+          <HeroSlides slides={HERO_SLIDES} />
         )}
         <div
           className="absolute inset-0"

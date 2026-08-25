@@ -8,15 +8,28 @@
  */
 import manifest from "../../prisma/catalogue.images.json";
 
-type Frame = { url: string; width: number; height: number; blur: string };
+export type Frame = { url: string; width: number; height: number; blur: string };
 
 const e = manifest.editorial as Record<string, Frame>;
 
+export type HeroSlide = { wide: Frame; portrait: Frame; alt: string };
+
+/**
+ * Three frames, cream → black → burgundy, each shipping a wide crop for
+ * desktop and a portrait for phones.
+ *
+ * They were chosen by measuring the mean luminance of the corner where the
+ * hero block lands in RTL, not by eye. Anything much above ~110 there cannot
+ * hold ivory type however hard the scrim is pushed — the original hero frame
+ * measured 164, which is why its headline kept reading weak.
+ */
+export const HERO_SLIDES: HeroSlide[] = [
+  { wide: e["hero-1-wide"], portrait: e["hero-1-portrait"], alt: "عباية شامبانيا بحواف مطرزة" },
+  { wide: e["hero-2-wide"], portrait: e["hero-2-portrait"], alt: "طقم بني بتطريز معدني" },
+  { wide: e["hero-3-wide"], portrait: e["hero-3-portrait"], alt: "طقم عنابي بربطة خصر" },
+].filter((s) => s.wide && s.portrait);
+
 export const EDITORIAL_IMAGES = {
-  /** Wide band of drape and embroidery — desktop, and the video's poster. */
-  heroWide: e["hero-wide"],
-  /** Full portrait — phones, where a wide crop would letterbox. */
-  heroPortrait: e["hero-portrait"],
   atelier: e.atelier,
   packaging: [e["packaging-1"], e["packaging-2"], e["packaging-3"]].filter(Boolean),
 };

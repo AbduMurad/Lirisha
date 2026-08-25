@@ -197,13 +197,24 @@ export const CATALOGUE = [
 
 /** Full-bleed frames the storefront uses outside the catalogue. */
 export const EDITORIAL = [
-  // The hero is art-directed rather than one frame stretched two ways. A 3:4
-  // portrait dropped into a wide desktop box crops to a band across the
-  // model's head; a wide crop on a phone leaves a letterbox. So: a wide band
-  // of drape and embroidery for desktop, the full portrait for mobile. The
-  // desktop frame doubles as the poster for the video loop.
-  { key: "hero-wide", src: "lirisha-03", ar: 16 / 9, width: 2000, top: 0.3, x: 0.56 },
-  { key: "hero-portrait", src: "lirisha-03", ar: 3 / 4, width: 1200, top: 0.02, x: 0.56 },
+  // ── hero slides ───────────────────────────────────────────────
+  //
+  // Art-directed, not one frame stretched two ways: a 3:4 portrait dropped
+  // into a wide desktop box crops to a band across the model's head, and a
+  // wide crop on a phone letterboxes. So each slide ships both.
+  //
+  // The frames were *measured*, not chosen by eye. Mean luminance of the
+  // bottom-inline-start zone — where the hero block lands in RTL — decides
+  // whether a frame can hold ivory type at all. lirisha-03, the original
+  // hero, reads 164 there: no scrim rescues that, which is why the type kept
+  // looking weak. These three read 65, 64 and 89, and they run cream → black
+  // → burgundy, so the sequence also shows three colourways.
+  { key: "hero-1-wide", src: "lirisha-41", ar: 16 / 9, width: 2000, top: 0.22, x: 0.55 },
+  { key: "hero-1-portrait", src: "lirisha-41", ar: 3 / 4, width: 1200, top: 0.22, x: 0.55 },
+  { key: "hero-2-wide", src: "lirisha-17", ar: 16 / 9, width: 2000, top: 0.24, x: 0.6 },
+  { key: "hero-2-portrait", src: "lirisha-17", ar: 3 / 4, width: 1200, top: 0.24, x: 0.6 },
+  { key: "hero-3-wide", src: "lirisha-22", ar: 16 / 9, width: 2000, top: 0.0, x: 0.55 },
+  { key: "hero-3-portrait", src: "lirisha-22", ar: 3 / 4, width: 1200, top: 0.0, x: 0.55 },
   { key: "atelier", src: "lirisha-20", ar: 4 / 5, width: 1200, top: 0.0, x: 0.45 },
   { key: "packaging-1", src: "lirisha-24", ar: 1, width: 900, top: 0.0, x: 0.56 },
   { key: "packaging-2", src: "lirisha-34", ar: 1, width: 900, top: 0.0, x: 0.5 },

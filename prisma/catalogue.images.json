@@ -245,19 +245,47 @@
     ]
   },
   "editorial": {
-    "hero-wide": {
-      "url": "/images/editorial/hero-wide.webp",
+    "hero-1-wide": {
+      "url": "/images/editorial/hero-1-wide.webp",
       "width": 2000,
       "height": 1125,
-      "blur": "data:image/webp;base64,UklGRlAAAABXRUJQVlA4IEQAAADwAQCdASoMAAcAA4BaJYgCdAEfA0Hs2BAA8Rp5PwGHXWzWLuPLyXpDakpSFJcR55sHQ8JCV6a0f82W2JH8yij4KAAAAA==",
-      "source": "lirisha-03"
+      "blur": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAADQAQCdASoMAAcAA4BaJQBOgBuojUHHQAD+4HQ33H+jVRM+ffpm2uVEYPHO1K+xbs0J0ZD92D8AAA==",
+      "source": "lirisha-41"
     },
-    "hero-portrait": {
-      "url": "/images/editorial/hero-portrait.webp",
+    "hero-1-portrait": {
+      "url": "/images/editorial/hero-1-portrait.webp",
       "width": 1200,
       "height": 1600,
-      "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAAAwAgCdASoMABAAA4BaJYgCdAEO5vWNnf2AAADeM7CxAJExXVacC3UtOEFR5tw2ysutkc9nTMFSNP/A6DNDAWv/m6UseoO7P/K9koSUGkaO0K6GuVQAAA==",
-      "source": "lirisha-03"
+      "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAQCdASoMABAAA4BaJQBOgBujgdUQ+HAA/uB0N9x/o1UTPn36ZtZSHoHiyEYa47CjOmIto3FCHZZ23qRkUm+bjqFpnMyUnh77MVxaGAA=",
+      "source": "lirisha-41"
+    },
+    "hero-2-wide": {
+      "url": "/images/editorial/hero-2-wide.webp",
+      "width": 2000,
+      "height": 1125,
+      "blur": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAADQAQCdASoMAAcAA4BaJZQC7ADcOlZxgAD9U+Ai3Xd22ck1PUx9Zn4mU9wCVIdh0KHVfCzQfAAAAA==",
+      "source": "lirisha-17"
+    },
+    "hero-2-portrait": {
+      "url": "/images/editorial/hero-2-portrait.webp",
+      "width": 1200,
+      "height": 1600,
+      "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQAgCdASoMABAAA4BaJZQCdAD8LkCFsLkAAM41f9PTXoXPVW5dB1TYH3uOFlgZHsiUmr9JzFjp545+clmpq0fbs6ax817aQanN0BxQAAA=",
+      "source": "lirisha-17"
+    },
+    "hero-3-wide": {
+      "url": "/images/editorial/hero-3-wide.webp",
+      "width": 2000,
+      "height": 1125,
+      "blur": "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAAAQAgCdASoMAAcAA4BaJQBOgP4Awv2zGJbAAP7eDqfyFeRKLZRVC0ZyPXz8xeLYILAZD92Pa4AAAA==",
+      "source": "lirisha-22"
+    },
+    "hero-3-portrait": {
+      "url": "/images/editorial/hero-3-portrait.webp",
+      "width": 1200,
+      "height": 1600,
+      "blur": "data:image/webp;base64,UklGRk4AAABXRUJQVlA4IEIAAADQAQCdASoMABAAA4BaJQBOgCB/lTfnEAD+3g67CfZ+suDoa8Nr+QVluAEZk6pX0KCxBtIMi6UpG67jqwgJuwMAAAA=",
+      "source": "lirisha-22"
     },
     "atelier": {
       "url": "/images/editorial/atelier.webp",
