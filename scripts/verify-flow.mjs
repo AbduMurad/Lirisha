@@ -25,12 +25,78 @@ const check = (name, pass, detail = "") => {
   console.log(`${pass ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
 };
 
+/**
+ * Poll until `fn` returns something truthy, or give up and return null.
+ *
+ * Everything this file waits for is asynchronous in a way a fixed sleep can
+ * only guess at: a tracking beacon in flight, a row being written, a drawer
+ * animating. `waitForTimeout(800)` passes on a fast machine and fails on a
+ * loaded 2-core CI runner, which is the least useful kind of test.
+ *
+ * Returning null rather than throwing is deliberate — the caller still reports
+ * a clean FAIL line, so a broken run prints which assertion died instead of a
+ * stack trace with the remaining checks unrun.
+ */
+async function until(fn, { timeout = 15000, interval = 250 } = {}) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    // `fn` may be a plain accessor (`() => waUrl`) or an async query, and may
+    // throw either way — await inside try covers all three.
+    let value = null;
+    try {
+      value = await fn();
+    } catch {
+      value = null;
+    }
+    if (value) return value;
+    if (Date.now() > deadline) return null;
+    await new Promise((r) => setTimeout(r, interval));
+  }
+}
+
 const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const ctx = await browser.newContext({
   viewport: { width: 1280, height: 900 },
   extraHTTPHeaders: { referer: "https://m.facebook.com/" },
 });
 const page = await ctx.newPage();
+
+// Generous, because a loaded CI runner is legitimately slow; the assertions
+// below poll, so this only bounds genuine hangs.
+page.setDefaultNavigationTimeout(45_000);
+page.setDefaultTimeout(20_000);
+
+// This suite once failed in CI with a bare navigation timeout and nothing to
+// go on — not reproducible locally under a cold image cache, a single-core
+// server, or both processes fighting over one core. Rather than guess again
+// next time, collect enough to tell a slow page from a broken one.
+const consoleErrors = [];
+const badResponses = [];
+page.on("console", (m) => {
+  if (m.type() === "error") consoleErrors.push(m.text().slice(0, 200));
+});
+page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message.slice(0, 200)}`));
+page.on("response", (r) => {
+  if (r.status() >= 400) badResponses.push(`${r.status()} ${r.url().slice(0, 120)}`);
+});
+
+function diagnose(err) {
+  console.error(`\n─── run failed: ${String(err?.message ?? err).split("\n")[0]}`);
+  console.error(`url at failure   : ${page.url()}`);
+  console.error(`checks completed : ${checks.length}`);
+  if (badResponses.length) console.error(`http >= 400      :\n  ${badResponses.slice(0, 10).join("\n  ")}`);
+  if (consoleErrors.length) console.error(`console errors   :\n  ${consoleErrors.slice(0, 10).join("\n  ")}`);
+  if (!badResponses.length && !consoleErrors.length) {
+    const timedOut = /timeout/i.test(String(err?.name) + String(err?.message));
+    console.error(
+      timedOut
+        ? "nothing failed and nothing errored — the page was slow, not broken"
+        : "no HTTP failures or console errors were captured before this",
+    );
+  }
+}
+process.on("uncaughtException", (e) => { diagnose(e); process.exit(1); });
+process.on("unhandledRejection", (e) => { diagnose(e); process.exit(1); });
 
 // Block the wa.me hand-off so the run doesn't wander off to WhatsApp.
 let waUrl = null;
@@ -39,51 +105,79 @@ await ctx.route("**://wa.me/**", (route) => {
   return route.abort();
 });
 
+// Never `networkidle`. This suite is about attribution, the cart and the order
+// row; it does not care whether the product photography has finished decoding.
+// Waiting for the network to fall quiet tied it to next/image throughput, and
+// on a cold CI cache /shop issues 17 optimiser requests through sharp while
+// competing with Chromium for two cores — which is how a 30s navigation
+// timeout got in front of a working money path.
+const READY = "domcontentloaded";
+
 // 1 · land from a Facebook link with a campaign tag
 await page.goto(`${BASE}/?utm_source=facebook&utm_medium=social&utm_campaign=verify-run`, {
-  waitUntil: "networkidle",
+  waitUntil: READY,
 });
-await page.waitForTimeout(1200);
 
-const vid = (await ctx.cookies()).find((c) => c.name === "lir_vid")?.value;
+const vid = await until(async () => (await ctx.cookies()).find((c) => c.name === "lir_vid")?.value);
 check("visitor cookie issued", Boolean(vid), vid?.slice(0, 8));
 
-const visitor = vid ? await prisma.visitor.findUnique({ where: { id: vid } }) : null;
+// Written by /api/track, which is a beacon in flight at this point.
+const visitor = vid ? await until(() => prisma.visitor.findUnique({ where: { id: vid } })) : null;
 check("visitor row created", Boolean(visitor));
 check("channel resolved to facebook", visitor?.channel === "facebook", visitor?.channel);
 check("utm campaign captured", visitor?.utmCampaign === "verify-run", visitor?.utmCampaign ?? "—");
 
 // 2 · open a product
-await page.goto(`${BASE}/shop`, { waitUntil: "networkidle" });
-const href = await page.locator('a[href^="/product/"]').first().getAttribute("href");
-await page.goto(`${BASE}${href}`, { waitUntil: "networkidle" });
-await page.waitForTimeout(900);
+await page.goto(`${BASE}/shop`, { waitUntil: READY });
+// The markup is what matters, not the photography — `attached`, not `visible`.
+const firstProduct = page.locator('a[href^="/product/"]').first();
+await firstProduct.waitFor({ state: "attached", timeout: 20000 });
+const href = await firstProduct.getAttribute("href");
+check("shop lists at least one piece", Boolean(href), href ?? "—");
 
-const slug = href.split("/").pop();
-const product = await prisma.product.findUnique({ where: { slug } });
-const pv = await prisma.event.count({ where: { visitorId: vid, type: "product_view", productId: product.id } });
-check("product_view tracked", pv > 0, `${pv} event(s)`);
+await page.goto(`${BASE}${href}`, { waitUntil: READY });
 
-// 3 · add to bag
+const slug = href?.split("/").pop();
+const product = slug ? await prisma.product.findUnique({ where: { slug } }) : null;
+if (!product) {
+  check("product resolved from the shop grid", false, slug ?? "no href");
+  throw new Error(`no product for slug ${slug} — is the catalogue seeded?`);
+}
+const pv = await until(async () => {
+  const n = await prisma.event.count({
+    where: { visitorId: vid, type: "product_view", productId: product.id },
+  });
+  return n > 0 ? n : null;
+});
+check("product_view tracked", Boolean(pv), `${pv ?? 0} event(s)`);
+
+// 3 · add to bag — Playwright waits for actionability, so no sleep is needed
+// before the click; the sleep after it was waiting on the tracking beacon.
 await page.getByRole("button", { name: /أضيفي إلى الحقيبة/ }).click();
-await page.waitForTimeout(800);
-const atc = await prisma.event.count({ where: { visitorId: vid, type: "add_to_cart" } });
-check("add_to_cart tracked", atc > 0);
+const atc = await until(async () => {
+  const n = await prisma.event.count({ where: { visitorId: vid, type: "add_to_cart" } });
+  return n > 0 ? n : null;
+});
+check("add_to_cart tracked", Boolean(atc));
 
-// 4 · check out
+// 4 · check out. fill() waits for the field to be editable, so the drawer's
+// transition needs no sleep of its own.
 await page.getByRole("button", { name: "متابعة الطلب" }).click();
-await page.waitForTimeout(400);
 await page.getByPlaceholder("الاسم الكامل").fill("اختبار آلي");
 await page.getByPlaceholder("0910000000").fill("0913334444");
 await page.getByPlaceholder("طرابلس").fill("طرابلس");
 await page.getByRole("button", { name: "إتمام الطلب عبر واتساب" }).click();
-await page.waitForTimeout(2500);
 
-const order = await prisma.order.findFirst({
-  where: { visitorId: vid },
-  include: { items: true },
-  orderBy: { createdAt: "desc" },
-});
+// The row is written server-side before the browser is handed to wa.me.
+const order = await until(
+  () =>
+    prisma.order.findFirst({
+      where: { visitorId: vid },
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  { timeout: 20000 },
+);
 
 check("order row created", Boolean(order), order?.ref);
 check("attribution frozen onto order", order?.channel === "facebook", order?.channel);
@@ -103,10 +197,29 @@ check(
 );
 check("size and length captured", Boolean(order?.items[0]?.size && order?.items[0]?.length),
   `${order?.items[0]?.size} / ${order?.items[0]?.length}`);
-check("whatsapp hand-off attempted", Boolean(waUrl));
-check("reference is in the whatsapp message", Boolean(waUrl && order && decodeURIComponent(waUrl).includes(order.ref)));
-check("whatsappOpenedAt stamped", Boolean(order?.whatsappOpenedAt));
-check("confirmation shows the reference", (await page.textContent("body")).includes(order?.ref ?? "@@"));
+// The hand-off, the beacon that stamps it, and the confirmation render all
+// race this assertion — each gets polled rather than slept on.
+const handoff = await until(() => waUrl, { timeout: 10000 });
+check("whatsapp hand-off attempted", Boolean(handoff));
+check(
+  "reference is in the whatsapp message",
+  Boolean(handoff && order && decodeURIComponent(handoff).includes(order.ref)),
+);
+
+const stamped = order
+  ? await until(async () => {
+      const o = await prisma.order.findUnique({ where: { id: order.id } });
+      return o?.whatsappOpenedAt ? o : null;
+    }, { timeout: 10000 })
+  : null;
+check("whatsappOpenedAt stamped", Boolean(stamped?.whatsappOpenedAt));
+
+const refShown = order
+  ? await until(async () => ((await page.textContent("body"))?.includes(order.ref) ? true : null), {
+      timeout: 10000,
+    })
+  : null;
+check("confirmation shows the reference", Boolean(refShown));
 
 // 5 · the dashboard's attribution query sees it
 const fbOrders = await prisma.order.count({ where: { channel: "facebook" } });

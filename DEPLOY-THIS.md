@@ -1,28 +1,28 @@
 # Shipping the real catalogue, and turning on CD
 
-Four commits are ready, verified locally: lint, typecheck, build, 21/21
-end-to-end assertions, and 14/14 on the deploy harness.
+Six commits, verified locally: lint, typecheck, build, 22/22 end-to-end
+assertions, and 14/14 on the deploy harness.
 
 | | |
 |---|---|
-| `fd6d055` | Stop hardcoding the Playwright browser path — the CI failure you hit |
+| `fd6d055` | Stop hardcoding the Playwright browser path |
 | `ae6b3df` | Nine real pieces, 24 frames, and the crop rules behind them |
-| `31277c6` | This note |
-| `…` | Continuous deployment: push to `main` → GHCR → Falkenstein |
+| `e7a63aa` | This note |
+| `765f006` | Continuous deployment: push to `main` → GHCR → Falkenstein |
+| `26e597e` | `tools` profile — container logs and stats at 9.6 MB |
+| *(new)* | Stop waiting on `networkidle` — the CI navigation timeout |
 
-## 0 · The one push I can't do for you
+## 0 · Getting the commits across
 
-GitHub Actions runs *from* the repo, so it can only build commits that are
-already on GitHub — it can't reach into my sandbox to fetch these. The first
-push has to come from you. After that, every push deploys itself.
+The first five are pushed. Anything after them still arrives as a bundle,
+because the git proxy in my sandbox refuses `AbduMurad/Lirisha` and the remedy
+it names — *"add the repository to the session's sources"* — has no
+implementation yet: no UI, no command, and
+[an open issue](https://github.com/anthropics/claude-code/issues/76248) quoting
+the same error. I have `GH_TOKEN` in my environment but won't use it to write
+to a repo the proxy just declined.
 
-The git proxy here refuses `AbduMurad/Lirisha` and named its own remedy:
-*"add the repository to the session's sources."* Do that in your client and I
-can push directly next time, and this step disappears. I have `GH_TOKEN` in my
-environment but haven't used it — writing to a repo the proxy just declined
-would be routing around the authorization boundary, not working within it.
-
-From your clone, on `main`, at `c4bb184`:
+From your clone, on `main`:
 
 ```bash
 git fetch /path/to/lirisha-catalogue.bundle HEAD:incoming
@@ -30,8 +30,8 @@ git merge --ff-only incoming
 git branch -d incoming
 ```
 
-**Don't push yet** — set up §1 first, or the first push builds an image the
-server can't pull.
+`--ff-only` on purpose: it either applies cleanly onto what you already have or
+refuses, rather than improvising a merge.
 
 ## 1 · One-time setup (about five minutes)
 

@@ -202,7 +202,7 @@ order records and the dashboard require a server.
 ## CI
 
 `.github/workflows/ci.yml` runs lint, typecheck and build, then boots the app
-against a seeded database and runs `scripts/verify-flow.mjs` — 21 assertions
+against a seeded database and runs `scripts/verify-flow.mjs` — 22 assertions
 over the path that actually earns money: attribution → product view → cart →
 order row → WhatsApp hand-off, including the case where the customer's
 ad-blocker eats `/api/track`.
