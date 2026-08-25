@@ -46,3 +46,7 @@ next-env.d.ts
 prisma/*.db
 prisma/*.db-journal
 src/generated
+
+# Prisma re-injects these on every `prisma generate`
+.agents/
+.claude/skills/prisma-*
