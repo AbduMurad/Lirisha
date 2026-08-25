@@ -26,10 +26,30 @@ export async function setOrderStatus(id: string, status: string) {
 
 export async function updateProduct(
   id: string,
-  data: { price?: number | null; isActive?: boolean; isFeatured?: boolean; position?: number },
+  data: {
+    price?: number | null;
+    isActive?: boolean;
+    isFeatured?: boolean;
+    position?: number;
+    nameAr?: string;
+    fabric?: string;
+  },
 ) {
   await guard();
-  await prisma.product.update({ where: { id }, data });
+
+  // The seeded names and fabrics were read off photographs, so the atelier will
+  // correct them — but an empty name would leave a blank card on the shop grid,
+  // and a name is not a place to accept unbounded input.
+  const patch = { ...data };
+  if (typeof patch.nameAr === "string") {
+    const trimmed = patch.nameAr.trim().slice(0, 120);
+    if (!trimmed) delete patch.nameAr;
+    else patch.nameAr = trimmed;
+  }
+  if (typeof patch.fabric === "string") patch.fabric = patch.fabric.trim().slice(0, 60);
+  if (!Object.keys(patch).length) return;
+
+  await prisma.product.update({ where: { id }, data: patch });
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   revalidatePath("/");

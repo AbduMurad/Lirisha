@@ -8,8 +8,43 @@ const browser = await chromium.launch(EXE ? { executablePath: EXE } : {});
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 const page = await ctx.newPage();
 
+/**
+ * A full-page screenshot fires before lazy images below the fold have been
+ * requested, so the capture shows blur placeholders and reads as a broken
+ * page. Scroll the whole document first, then return to the top.
+ */
+async function settle(p) {
+  await p.evaluate(async () => {
+    const step = window.innerHeight * 0.8;
+    for (let y = 0; y < document.body.scrollHeight; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 120));
+    }
+    window.scrollTo(0, 0);
+    // An <img> that never gets a src fires neither load nor error, so every
+    // wait here is raced against a deadline rather than trusted to settle.
+    const deadline = (ms) => new Promise((r) => setTimeout(r, ms));
+    await Promise.race([
+      Promise.all(
+        [...document.images]
+          .filter((i) => !i.complete)
+          .map(
+            (i) =>
+              new Promise((r) => {
+                i.addEventListener("load", r, { once: true });
+                i.addEventListener("error", r, { once: true });
+              }),
+          ),
+      ),
+      deadline(4000),
+    ]);
+  });
+  await p.waitForTimeout(400);
+}
+
 async function shot(path, name, opts = {}) {
   await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  if (opts.full) await settle(page);
   await page.waitForTimeout(opts.wait ?? 900);
   await page.screenshot({ path: `${OUT}/${name}.png`, fullPage: opts.full ?? false });
   console.log(name);

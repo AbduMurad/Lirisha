@@ -30,8 +30,8 @@ every WhatsApp order back to the traffic source that produced it.
 npm install
 cp .env.example .env          # then edit ADMIN_PASSWORD + AUTH_SECRET
 npm run db:migrate            # creates prisma/dev.db
-npm run db:seed               # 24 products across 9 silhouettes
-npm run assets:placeholders   # fabric-swatch placeholders, until real photos land
+npm run assets:import ./photos  # crops the photography → public/images + a manifest
+npm run db:seed               # 9 pieces, 24 frames
 npm run db:demo               # OPTIONAL — 45 days of fake traffic so the dashboard has data
 npm run dev
 ```
@@ -52,18 +52,38 @@ NEXT_PUBLIC_SITE_URL  https://lirisha.ly
 WHATSAPP_NUMBER       218910000000           # initial value; editable in /admin/settings
 ```
 
-## Real photography
+## The photography
 
-Drop a folder of shots per silhouette and run:
+The catalogue is the house's own photography, transcribed from the brand's
+Facebook gallery. `scripts/catalogue.mjs` is the single source of truth: it
+names each piece, its copy, and the source frames that belong to it.
 
 ```bash
-node scripts/import-photos.mjs ~/photos/satin-embroidered --group satin-embroidered
+npm run assets:import ~/photos     # folder holding lirisha-01.jpg … lirisha-42.jpg
+npm run db:seed
 ```
 
-It centre-crops to 5:7 (2:3 for the first frame), encodes WebP, generates blur
-placeholders, and prints a block to paste into `prisma/seed.mjs`. Shot order per
-piece: full-length front, full-length back, three-quarter in motion, fabric
-macro, embroidery detail, cuff.
+The import writes `public/images/products/*.webp`, the full-bleed frames in
+`public/images/editorial/`, and `prisma/catalogue.images.json` (paths + blur
+placeholders), which both the seed and the home page read.
+
+**Why the crops are hand-placed.** The house blurs faces in its own
+photographs. A 5:7 centre-crop of a full-length model shot puts that blur in the
+middle of the product card, where it reads as a defect rather than a choice — so
+each frame declares where its crop window starts:
+
+```js
+{ src: "lirisha-18", kind: "front", top: 0.33, x: 0.35 }
+```
+
+`top` is the fraction of source height the window begins at, `x` its horizontal
+centre. The window is then the largest one of the target ratio that fits below
+it, clamped to the image. `sharp`'s `position: "attention"` is exactly wrong
+here — it finds the face.
+
+Adding a piece means adding an entry to `CATALOGUE` and re-running both
+commands. Prices are deliberately `null`: every piece reads **السعر عند الطلب**
+until a real figure is entered at `/admin/products`.
 
 ## Deployment — Docker Compose
 
@@ -183,7 +203,7 @@ order records and the dashboard require a server.
 ## CI
 
 `.github/workflows/ci.yml` runs lint, typecheck and build, then boots the app
-against a seeded database and runs `scripts/verify-flow.mjs` — 20 assertions
+against a seeded database and runs `scripts/verify-flow.mjs` — 21 assertions
 over the path that actually earns money: attribution → product view → cart →
 order row → WhatsApp hand-off, including the case where the customer's
 ad-blocker eats `/api/track`.

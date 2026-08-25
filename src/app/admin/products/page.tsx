@@ -37,12 +37,12 @@ export default async function ProductsPage() {
               )}
             </div>
 
-            <div style={{ minInlineSize: 220, flex: 1 }}>
+            <div style={{ minInlineSize: 150 }}>
               <Link href={`/product/${p.slug}`} className="hov" style={{ fontSize: "var(--t-body-s)" }}>
-                {p.nameAr} <span className="text-muted">— {p.colorAr}</span>
+                {p.colorAr}
               </Link>
               <p className="micro">
-                {CATEGORY_LABEL[p.category] ?? p.category} · {p.fabric} · {p.embroidery}
+                {CATEGORY_LABEL[p.category] ?? p.category} · {p.embroidery}
               </p>
             </div>
 
@@ -51,15 +51,19 @@ export default async function ProductsPage() {
               price={p.price}
               isActive={p.isActive}
               isFeatured={p.isFeatured}
+              nameAr={p.nameAr}
+              fabric={p.fabric}
             />
           </div>
         ))}
       </div>
 
       <p className="micro mt-8" style={{ maxInlineSize: "70ch", lineHeight: 1.85 }}>
-        إضافة قطعة جديدة أو تغيير الصور يتم حالياً من ملف البيانات (prisma/seed.mjs) أو
-        مباشرة عبر Prisma Studio بالأمر <span className="ltr">npm run db:studio</span>.
-        محرّر كامل للقطع داخل اللوحة هو الخطوة التالية المقترحة.
+        الاسم والقماش والسعر تُعدَّل هنا مباشرة. القطعة بلا سعر تظهر للزبونة
+        «السعر عند الطلب». إضافة قطعة جديدة أو تغيير الصور يتم من ملف
+        <span className="ltr"> scripts/catalogue.mjs </span> ثم
+        <span className="ltr"> npm run assets:import </span> و
+        <span className="ltr"> npm run db:seed</span>.
       </p>
     </AdminShell>
   );

@@ -14,7 +14,6 @@
     "db:seed": "node prisma/seed.mjs",
     "db:demo": "node scripts/seed-analytics.mjs",
     "db:demo:wipe": "node scripts/seed-analytics.mjs --wipe",
-    "assets:placeholders": "node scripts/make-placeholders.mjs",
     "assets:import": "node scripts/import-photos.mjs",
     "shots": "node scripts/shots.mjs"
   },

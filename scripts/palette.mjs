@@ -12,4 +12,5 @@ export const PALETTE = [
   { key: "fiddi",     nameAr: "فضي",        hex: "#C3C3BE", base: "#C3C3BE", light: "#E1E1DC", dark: "#7C7C76", sheen: "#FFFFFF", seed: 47 },
   { key: "bunni",     nameAr: "بني داكن",   hex: "#4A3A2E", base: "#4A3A2E", light: "#6A5341", dark: "#302419", sheen: "#A4886B", seed: 53 },
   { key: "labani",    nameAr: "لبني",       hex: "#E8DFD2", base: "#E8DFD2", light: "#F7F1E8", dark: "#A2947F", sheen: "#FFFFFF", seed: 59 },
+  { key: "samawi",    nameAr: "سماوي",      hex: "#B7C9DC", base: "#B7C9DC", light: "#D6E2ED", dark: "#7E92A8", sheen: "#F2F7FB", seed: 61 },
 ];

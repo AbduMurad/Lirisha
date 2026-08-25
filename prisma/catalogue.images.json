@@ -1,0 +1,284 @@
+{
+  "images": {
+    "mikado-shafaq-aaji": [
+      {
+        "url": "/images/products/mikado-shafaq-aaji-1.webp",
+        "heroUrl": "/images/products/mikado-shafaq-aaji-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAADwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdMoACsl4GV0pV2Y4AAMqj9xie3SGxqi+Kc152R9AIfIvKzD9lGptQSPFQxV1DOt8zvqSvFci/L3Z516IVIIsY+DSNqpAAAA==",
+        "source": "lirisha-03"
+      },
+      {
+        "url": "/images/products/mikado-shafaq-aaji-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdABusvFGPkApfngAA/tbF7lsjhZKMaJfx2pQNaeEgPvZVwVnICLP2u/qmYMJbraIyr6D4mVgOhIc4lSCuWUkpUAAA",
+        "source": "lirisha-02"
+      },
+      {
+        "url": "/images/products/mikado-shafaq-aaji-3.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 2,
+        "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAADwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JQBOmUABQDtaAwcrOIragAPa4RC4Q9IsIWMWxinlpLSui3viuc2eWuisFi00wKSwZtMIaEMJPjsW3pIynYU/mhKIV83hBV8OtjGgA",
+        "source": "lirisha-01"
+      },
+      {
+        "url": "/images/products/mikado-shafaq-aaji-4.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 3,
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAACwAwCdASoMABEAPu1iqk2ppaQiMAgBMB2JZwCdAB6UVm++jkt3UAD+MN4TdwMbC5G7X566sAmTiMUVQIurJwRFv4kwebnrX4kgFVtxoGhA5lQmU0AAAA==",
+        "source": "lirisha-04"
+      }
+    ],
+    "zuhur-nuhasiya-aaji": [
+      {
+        "url": "/images/products/zuhur-nuhasiya-aaji-1.webp",
+        "heroUrl": "/images/products/zuhur-nuhasiya-aaji-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAAAQBACdASoMABEAPu1iqU2ppaOiMAgBMB2JQBOmUGZjCI3SifdxYzuiYADOFxr3CgRwVhgeCjA891g79ljLNTkuTHFAYvZEESgWBPZYr0Q6rtEWDC5jzE23Tjah0f1T7y8qVssSYYTBVm4/IAA=",
+        "source": "lirisha-16"
+      },
+      {
+        "url": "/images/products/zuhur-nuhasiya-aaji-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCsABwjoTh78E+DAAD+aPnMvKZz3jF0aFa7Iu0jilIGV4tnn/KqUrs772RSadvWV4f51yVRv+2bfuft8KYHwyTpCCPiczeVwAAA",
+        "source": "lirisha-15"
+      },
+      {
+        "url": "/images/products/zuhur-nuhasiya-aaji-3.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 2,
+        "blur": "data:image/webp;base64,UklGRmoAAABXRUJQVlA4IF4AAADQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdMoACNPpMhX6HBYAAyxwMV2lA9ZNK6OYRJoPmHDzYiBqleFfn6ayV78TnP3GAhoJ3I2o6tEBL1m8JsEMjFSsqkAAA",
+        "source": "lirisha-14"
+      }
+    ],
+    "kristal-fiddi-shambani": [
+      {
+        "url": "/images/products/kristal-fiddi-shambani-1.webp",
+        "heroUrl": "/images/products/kristal-fiddi-shambani-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAACQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYxegAhAATpfegVPkAPeHeqOM5u8EqSn+K4bZZwrhRQoy9UucrpR2AuHybYPZ72wpZzs9+y1tWmpUNF56hUnQzWLFCZBFZ0iiAAAA",
+        "source": "lirisha-30"
+      },
+      {
+        "url": "/images/products/kristal-fiddi-shambani-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAADQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JZQCw7Bud5LoVYmH09wAAzef1ho+exYWf7KasBAnaWrCyYDxe9xlZyKoPDMkHqllHRDM2DUa8CkwNpWns+hL12EAAAA==",
+        "source": "lirisha-20"
+      },
+      {
+        "url": "/images/products/kristal-fiddi-shambani-3.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 2,
+        "blur": "data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdABmUSIijzo3gAAD5VrwbCFxBMps7HdLMGL1oi2h89qcumgHiSGHzb1t0rMZ6XejuKAWivTo0EmANEi/OJwAAAA==",
+        "source": "lirisha-27"
+      }
+    ],
+    "shambani-hawaf-shambani": [
+      {
+        "url": "/images/products/shambani-hawaf-shambani-1.webp",
+        "heroUrl": "/images/products/shambani-hawaf-shambani-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAADwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JQBOgBC1aHnF+nbQPgMqwAPagCZX0QoELZYW4DvGJgn3dYH4Qp86RyRYWZh7eqKbH4BD0Vpp2hKit8pGlMYt9iyNzIf96zAAAAA==",
+        "source": "lirisha-29"
+      },
+      {
+        "url": "/images/products/shambani-hawaf-shambani-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAADQAwCdASoMABEAPu1iqU2ppaQiMAgBMB2JZQCdMoACs21Q88C8hXgA/rMxwufO8Z1xLmdmg2pP85goS7uQyTgcuBl235RKH0R8cateCzU27CF4qgnu6jjdJO1JDqUoUILswgAA",
+        "source": "lirisha-41"
+      },
+      {
+        "url": "/images/products/shambani-hawaf-shambani-3.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 2,
+        "blur": "data:image/webp;base64,UklGRn4AAABXRUJQVlA4IHIAAADQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdABuHl/cfqeIYCgAA+8KTBHjdEJ4uFQ6fEC+Mt620k4Tg7Lv+GV/H9GRR80m8g4PGFMmpJbv00qqVri5JigMK0e3ySFgtKbhL8FYA3pgikgo5qeBAAAA=",
+        "source": "lirisha-39"
+      },
+      {
+        "url": "/images/products/shambani-hawaf-shambani-4.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "fabric",
+        "position": 3,
+        "blur": "data:image/webp;base64,UklGRmgAAABXRUJQVlA4IFwAAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JZQCdABuORetltOSO8AD+nsjjnr20RxZ0y/CVz7lIgGuRv8zs/rxvpx9kTnaFdyobLefzFrXH78GcT8JFAX6s7I4AAA==",
+        "source": "lirisha-28"
+      },
+      {
+        "url": "/images/products/shambani-hawaf-shambani-5.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 4,
+        "blur": "data:image/webp;base64,UklGRngAAABXRUJQVlA4IGwAAAAQBACdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCw7BufOqcJGpSG2LFlgAD+6lORCwPLX17V1WpgBFU76a2OZlOLWHmqogilPaqITplvxv6x405TmL27MDvT3Si3klYVdDatTYC6WGFn6/EAAAA=",
+        "source": "lirisha-35"
+      }
+    ],
+    "organza-dhahabi-aaji": [
+      {
+        "url": "/images/products/organza-dhahabi-aaji-1.webp",
+        "heroUrl": "/images/products/organza-dhahabi-aaji-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JYwCdABuHZTXgEUNTAAD86EqFb3OgR7MNRa+k5pJvGPIg9bbQVjPTwSsnANJO64KWIkJfdmxlBGy2p9AAAA==",
+        "source": "lirisha-33"
+      },
+      {
+        "url": "/images/products/organza-dhahabi-aaji-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRm4AAABXRUJQVlA4IGIAAACQAwCdASoMABEAPu1iqU2ppaQiMAgBMB2JYwC7ABhwON2I5pcAAP6rpKHnLIdYF8NwHO3LXpv3SN1zFtvHHXgin97Y9KbpxAJxeRSWjxjak3Y5F2NgnDJEDeiK9EOq0MMoAA==",
+        "source": "lirisha-32"
+      }
+    ],
+    "mi3taf-injlizi-samawi": [
+      {
+        "url": "/images/products/mi3taf-injlizi-samawi-1.webp",
+        "heroUrl": "/images/products/mi3taf-injlizi-samawi-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAACwAwCdASoMABEAPu1kq04ppaQiMAgBMB2JYwC7IMgCY5FAZ+/UqAD+6pnavD1N9brHeShtAu4xMbiMqLrA4BsZzNQ83mSE2fgwBn0y+MxM0AAA",
+        "source": "lirisha-09"
+      }
+    ],
+    "unnabi-rabta-burgundy": [
+      {
+        "url": "/images/products/unnabi-rabta-burgundy-1.webp",
+        "heroUrl": "/images/products/unnabi-rabta-burgundy-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JZQC7ABk7Ne5vdQuEwAD+wf8pw3Gqt6S8JO20vRcDpniyoStVeEyS1CWJz5yPMRFMC6SQAAA=",
+        "source": "lirisha-22"
+      },
+      {
+        "url": "/images/products/unnabi-rabta-burgundy-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAABwAwCdASoMABEAPu1iqU2ppaQiMAgBMB2JQBYdgwfOge/IjgAA/uNPtLiH2YM0hWC097tavlZQmr1wwKZPqRgM8wkKCBdhooMocqo7RBlWq4xzB0Ax4AAA",
+        "source": "lirisha-21"
+      }
+    ],
+    "bunni-mutarraz-bunni": [
+      {
+        "url": "/images/products/bunni-mutarraz-bunni-1.webp",
+        "heroUrl": "/images/products/bunni-mutarraz-bunni-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JZQCdABukYMcW6u3AhMAA4m1ISEruaqpxDFtBt00tahYiWr+wOk8wV0dNYeT6zp61HCw8xdN2LR0pidt7ngAA",
+        "source": "lirisha-18"
+      },
+      {
+        "url": "/images/products/bunni-mutarraz-bunni-2.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "three-quarter",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAACwAwCdASoMABEAPu1iqU2ppaQiMAgBMB2JZwC7ABkmXHWXV6vxYADOGY8KtGnb/qSNluMmjITh03/XsOxUE1xBn/a6sC+nHcmqgpm0FqcbgCn48soAAA==",
+        "source": "lirisha-17"
+      }
+    ],
+    "aswad-slip-aswad": [
+      {
+        "url": "/images/products/aswad-slip-aswad-1.webp",
+        "heroUrl": "/images/products/aswad-slip-aswad-1-hero.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "front",
+        "position": 0,
+        "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAADwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JQBOmUABOioYLrwI2SsngAMlPyDnSz4UQHTS3JpYVD6aIzmQax4gazlCEXyt8b9Yc/JqBe2QNG1t6UoMAAA==",
+        "source": "lirisha-42"
+      },
+      {
+        "url": "/images/products/aswad-slip-aswad-2b.webp",
+        "width": 1200,
+        "height": 1680,
+        "kind": "detail",
+        "position": 1,
+        "blur": "data:image/webp;base64,UklGRl4AAABXRUJQVlA4IFIAAACwAwCdASoMABEAPu1iqU2ppaOiMAgBMB2JQBadA3abjyJTjsTvgAD+hu7vVnECcPz3WVOF8tPeQV2rS60iCg3L9vQwuJyvtZxX5xNf3UARNoAA",
+        "source": "lirisha-42"
+      }
+    ]
+  },
+  "editorial": {
+    "hero": {
+      "url": "/images/editorial/hero.webp",
+      "width": 1600,
+      "height": 2133,
+      "blur": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADwAQCdASoMABAAA4BaJQBOgCHelQ+7nOwAyydWmERxTzRIdAjCAhpbIHEu7ujB6UXWJ9oPP1Jubp6Y/nSXtGoeA4hGK4snGY2pSrgIutLL3nqAAAA=",
+      "source": "lirisha-03"
+    },
+    "atelier": {
+      "url": "/images/editorial/atelier.webp",
+      "width": 1200,
+      "height": 1500,
+      "blur": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAADwAQCdASoMAA8AA4BaJQBOgB6S+wx0QAAA4mExv/kHJiqR6w0KSuFUPzYlMsCbVFLKYIIFdXKRU2KgMl3URNufLR5gr4ckYUj6pMYPkYAAAA==",
+      "source": "lirisha-20"
+    },
+    "packaging-1": {
+      "url": "/images/editorial/packaging-1.webp",
+      "width": 900,
+      "height": 900,
+      "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAAAQAgCdASoMAAwAA4BaJQBOgCPw5yUhJQwAAM45KGX19BK/RMZEz0V39SP2z0Ab+O+fC0nTQFyMCNnTPQVWZhRFAw5KZrzkanyb35LxwAA=",
+      "source": "lirisha-24"
+    },
+    "packaging-2": {
+      "url": "/images/editorial/packaging-2.webp",
+      "width": 900,
+      "height": 900,
+      "blur": "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAADQAQCdASoMAAwAA4BaJZACdACRr2TuAAD+YUf+5RQrWRHSUZHCxbcUeOdYs+uNYuFJ7v3fsd7PZ1ybJYBLCWaRTsxL1eGCWd3CgDJWxFm31DtR5QVZAAAA",
+      "source": "lirisha-34"
+    },
+    "packaging-3": {
+      "url": "/images/editorial/packaging-3.webp",
+      "width": 900,
+      "height": 900,
+      "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAABQAgCdASoMAAwAA4BaJZgCdAYqra4auDISeYAAzj6cx698jedy8gC3W0OF3bVN/Ef7yDGw8hpdWVmUTZ4PAgxFBUkWvZYD57ZMKWTRwfO3lLjvyvsPGOSohNy6Cdjm1aEhJgAA",
+      "source": "lirisha-40"
+    }
+  }
+}

@@ -93,6 +93,14 @@ check(
   order?.subtotal === (product.price ?? 0) * (order?.items[0]?.qty ?? 0),
   `${order?.subtotal} vs ${product.price}`,
 );
+// The catalogue ships price-on-request until the atelier enters real figures,
+// so the quote path is the live path, not an edge case. If a piece has no
+// price the order must say so rather than quietly reading as free.
+check(
+  "unpriced piece flagged as a quote, not as zero",
+  product.price === null ? order?.hasQuoteItems === true : order?.hasQuoteItems === false,
+  `price ${product.price} → hasQuoteItems ${order?.hasQuoteItems}`,
+);
 check("size and length captured", Boolean(order?.items[0]?.size && order?.items[0]?.length),
   `${order?.items[0]?.size} / ${order?.items[0]?.length}`);
 check("whatsapp hand-off attempted", Boolean(waUrl));
@@ -113,7 +121,9 @@ const blocked = await browser.newContext({
 const bp = await blocked.newPage();
 await bp.route("**/api/track", (r) => r.abort());
 await bp.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-const priced = await prisma.product.findFirst({ where: { price: { not: null }, isActive: true } });
+// Any active piece will do — the catalogue may be entirely price-on-request.
+const priced = await prisma.product.findFirst({ where: { isActive: true } });
+if (!priced) throw new Error("no active products — seed the catalogue first");
 const blockedRes = await bp.evaluate(async (productId) => {
   const r = await fetch("/api/orders", {
     method: "POST",

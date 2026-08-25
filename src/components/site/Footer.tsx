@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CATEGORY_LABEL } from "@/lib/catalog-shared";
 
 export function Footer({
   whatsappNumber,
@@ -16,10 +15,10 @@ export function Footer({
     {
       title: "المتجر",
       links: [
-        { href: "/shop?category=abaya", label: CATEGORY_LABEL.abaya },
-        { href: "/shop?category=bisht", label: CATEGORY_LABEL.bisht },
-        { href: "/shop?category=jalabiya", label: CATEGORY_LABEL.jalabiya },
-        { href: "/shop?occasion=عروس", label: "للعروس" },
+        { href: "/shop", label: "كل القطع" },
+        { href: "/shop?occasion=مناسبات", label: "لمناسباتك" },
+        { href: "/shop?occasion=يومي", label: "لكل يوم" },
+        { href: "/shop?embroidery=تطريز يدوي", label: "المطرّز يدوياً" },
       ],
     },
     {

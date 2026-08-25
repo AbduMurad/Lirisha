@@ -1,86 +1,159 @@
 /**
- * Turns a folder of raw photographs into the catalogue's image set.
+ * Builds the catalogue's image set from the house photography.
  *
- *   node scripts/import-photos.mjs <source-folder> [--group satin-embroidered]
+ *   node scripts/import-photos.mjs <source-folder>
  *
- * What it does, per file, in filename order:
- *   · centre-crops to 5:7 (the card + gallery ratio) at 1200×1680
- *   · also writes a 2:3 rendition at 1200×1800 for the first shot of a group
- *     (the PDP hero)
- *   · encodes WebP q82 + a tiny base64 blur placeholder
- *   · writes public/images/products/<group>-<n>.webp
- *   · prints a ready-to-paste `images:` block for prisma/seed.mjs
+ * The manifest lives in scripts/catalogue.mjs. Each frame names a source file
+ * and where its crop window starts, because a plain centre-crop is wrong here:
+ * the house blurs faces in its own photographs, and a 5:7 centre-crop of a
+ * full-length model shot puts that blur in the middle of the product card. So
+ * the window is placed explicitly — `top` is the fraction of source height the
+ * crop begins at, `x` the horizontal centre — and the window is then the
+ * largest one of the target ratio that fits below it.
  *
- * Photography notes that matter more than any of this: shoot the full length
- * with the hem in frame, always include a back shot, and keep one background
- * across the whole grid. A 1:1 crop or a mixed-background grid is the fastest
- * way to make the collection look cheap.
+ * Outputs, per frame:
+ *   · public/images/products/<slug>-<n>.webp      5:7, 1200×1680  (card + gallery)
+ *   · public/images/products/<slug>-1-hero.webp   2:3, 1200×1800  (PDP hero only)
+ *   · a 12px blur placeholder, inlined as base64
+ *
+ * Plus the full-bleed editorial frames in public/images/editorial/.
+ *
+ * Everything lands in prisma/catalogue.images.json, which the seed reads. Run
+ * this whenever the photography changes, then re-seed.
  */
 import sharp from "sharp";
-import { readdir, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, access } from "node:fs/promises";
 import path from "node:path";
+import { CATALOGUE, EDITORIAL, CARD_AR, HERO_AR } from "./catalogue.mjs";
 
-const src = process.argv[2];
-if (!src) {
-  console.error("usage: node scripts/import-photos.mjs <source-folder> [--group <key>]");
-  process.exit(1);
-}
-const gi = process.argv.indexOf("--group");
-const group = gi > -1 ? process.argv[gi + 1] : path.basename(src).toLowerCase().replace(/[^a-z0-9-]+/g, "-");
-
-const OUT = "public/images/products";
-const EXT = /\.(jpe?g|png|webp|avif|heic|tiff?)$/i;
-
-await mkdir(OUT, { recursive: true });
-
-const files = (await readdir(src)).filter((f) => EXT.test(f)).sort();
-if (!files.length) {
-  console.error(`no images found in ${src}`);
+const SRC = process.argv[2];
+if (!SRC) {
+  console.error("usage: node scripts/import-photos.mjs <source-folder>");
   process.exit(1);
 }
 
-const manifest = [];
+const OUT_P = "public/images/products";
+const OUT_E = "public/images/editorial";
+await mkdir(OUT_P, { recursive: true });
+await mkdir(OUT_E, { recursive: true });
 
-for (const [i, file] of files.entries()) {
-  const input = path.join(src, file);
-  const n = i + 1;
+/**
+ * The largest window of aspect ratio `ar` that fits inside W×H starting no
+ * higher than `top`, centred horizontally on `x`. Clamped to the image on every
+ * side, so a bad offset degrades to a valid crop instead of throwing.
+ */
+function window_(W, H, ar, { top = 0, x = 0.5 } = {}) {
+  const startY = Math.round(Math.min(Math.max(0, top), 0.9) * H);
+  let h = H - startY;
+  let w = h * ar;
+  if (w > W) {
+    w = W;
+    h = w / ar;
+  }
+  w = Math.floor(w);
+  h = Math.floor(h);
+  const left = Math.round(Math.min(Math.max(0, x * W - w / 2), W - w));
+  const y = Math.min(startY, H - h);
+  return { left, top: y, width: w, height: h };
+}
 
-  const ratios = i === 0 ? [["", 1200, 1800], ["-card", 1200, 1680]] : [["", 1200, 1680]];
+async function resolve(src) {
+  for (const ext of [".jpg", ".jpeg", ".png", ".webp"]) {
+    const p = path.join(SRC, src + ext);
+    try {
+      await access(p);
+      return p;
+    } catch {
+      /* next */
+    }
+  }
+  throw new Error(`source frame not found: ${src} (looked in ${SRC})`);
+}
 
-  for (const [suffix, w, h] of ratios) {
-    const name = `${group}-${n}${suffix}.webp`;
-    await sharp(input)
-      .rotate()
-      .resize(w, h, { fit: "cover", position: "attention" })
-      .webp({ quality: 82, effort: 5 })
-      .toFile(path.join(OUT, name));
+async function render(input, outPath, ar, targetW, targetH, focus) {
+  const img = sharp(input).rotate();
+  const { width: W, height: H } = await img.metadata();
+  const box = window_(W, H, ar, focus);
+  await sharp(input)
+    .rotate()
+    .extract(box)
+    .resize(targetW, targetH, { fit: "cover" })
+    .webp({ quality: 82, effort: 5 })
+    .toFile(outPath);
+  return box;
+}
+
+async function blurOf(input, ar, focus) {
+  const img = sharp(input).rotate();
+  const { width: W, height: H } = await img.metadata();
+  const box = window_(W, H, ar, focus);
+  const buf = await sharp(input)
+    .rotate()
+    .extract(box)
+    .resize(12, Math.round(12 / ar), { fit: "cover" })
+    .webp({ quality: 40 })
+    .toBuffer();
+  return `data:image/webp;base64,${buf.toString("base64")}`;
+}
+
+// ── catalogue frames ──────────────────────────────────────────
+const images = {};
+let frameCount = 0;
+
+for (const piece of CATALOGUE) {
+  const rows = [];
+
+  for (const [i, frame] of piece.frames.entries()) {
+    const input = await resolve(frame.src);
+    const focus = { top: frame.top ?? 0, x: frame.x ?? 0.5 };
+    const n = i + 1;
+    const stem = `${piece.slug}-${n}${frame.suffix ?? ""}`;
+
+    await render(input, path.join(OUT_P, `${stem}.webp`), CARD_AR, 1200, 1680, focus);
+    if (i === 0) {
+      await render(input, path.join(OUT_P, `${stem}-hero.webp`), HERO_AR, 1200, 1800, focus);
+    }
+
+    rows.push({
+      url: `/images/products/${stem}.webp`,
+      heroUrl: i === 0 ? `/images/products/${stem}-hero.webp` : undefined,
+      width: 1200,
+      height: 1680,
+      kind: frame.kind ?? "detail",
+      position: i,
+      blur: await blurOf(input, CARD_AR, focus),
+      source: frame.src,
+    });
+    frameCount += 1;
   }
 
-  const blurBuf = await sharp(input).resize(12, 17, { fit: "cover" }).webp({ quality: 40 }).toBuffer();
+  images[piece.slug] = rows;
+}
 
-  manifest.push({
-    url: `/${OUT.replace(/^public\//, "")}/${group}-${n}.webp`,
-    width: i === 0 ? 1200 : 1200,
-    height: i === 0 ? 1800 : 1680,
-    kind: n === 1 ? "front" : n === 2 ? "back" : n === 3 ? "three-quarter" : "detail",
-    position: i,
-    blur: `data:image/webp;base64,${blurBuf.toString("base64")}`,
-    source: file,
-  });
+// ── editorial frames ──────────────────────────────────────────
+const editorial = {};
+for (const e of EDITORIAL) {
+  const input = await resolve(e.src);
+  const focus = { top: e.top ?? 0, x: e.x ?? 0.5 };
+  const h = Math.round(e.width / e.ar);
+  await render(input, path.join(OUT_E, `${e.key}.webp`), e.ar, e.width, h, focus);
+  editorial[e.key] = {
+    url: `/images/editorial/${e.key}.webp`,
+    width: e.width,
+    height: h,
+    blur: await blurOf(input, e.ar, focus),
+    source: e.src,
+  };
 }
 
 await writeFile(
-  path.join(OUT, `${group}.manifest.json`),
-  JSON.stringify(manifest, null, 2),
+  "prisma/catalogue.images.json",
+  JSON.stringify({ images, editorial }, null, 2),
   "utf8",
 );
 
-console.log(`\n${files.length} images → ${OUT}/${group}-*.webp\n`);
-console.log("paste into prisma/seed.mjs:\n");
 console.log(
-  JSON.stringify(
-    manifest.map(({ url, width, height, kind, position }) => ({ url, width, height, kind, position })),
-    null,
-    2,
-  ),
+  `${frameCount} catalogue frames across ${CATALOGUE.length} pieces → ${OUT_P}\n` +
+    `${EDITORIAL.length} editorial frames → ${OUT_E}\n` +
+    `manifest → prisma/catalogue.images.json`,
 );

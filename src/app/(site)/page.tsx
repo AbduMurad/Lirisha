@@ -1,9 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getProducts, CATEGORY_LABEL } from "@/lib/catalog";
+import { getProducts } from "@/lib/catalog";
 import { ProductCard } from "@/components/site/ProductCard";
+import { EDITORIAL_IMAGES } from "@/lib/editorial";
 
 export const dynamic = "force-dynamic";
+
+/** Three ways into the same nine pieces, by what the woman is dressing for. */
+const EDITS = [
+  { label: "لمناسباتك", href: "/shop?occasion=مناسبات", slug: "kristal-fiddi-shambani" },
+  { label: "المطرّز يدوياً", href: "/shop?embroidery=تطريز يدوي", slug: "mikado-shafaq-aaji" },
+  { label: "لكل يوم", href: "/shop?occasion=يومي", slug: "mi3taf-injlizi-samawi" },
+];
 
 export default async function HomePage() {
   const [featured, latest] = await Promise.all([
@@ -11,7 +19,7 @@ export default async function HomePage() {
     getProducts({ category: "abaya" }, 6),
   ]);
 
-  const hero = featured[0]?.images[0]?.url ?? "/images/editorial/hero.jpg";
+  const hero = EDITORIAL_IMAGES.hero;
 
   return (
     <>
@@ -21,18 +29,27 @@ export default async function HomePage() {
         style={{ blockSize: "calc(100svh - var(--header-h) - 40px)", minBlockSize: 460 }}
       >
         <Image
-          src={hero}
+          src={hero.url}
           alt="مجموعة ليريشيا"
           fill
           priority
           sizes="100vw"
+          placeholder="blur"
+          blurDataURL={hero.blur}
           className="object-cover"
+          // The frame is a 3:4 portrait; on a wide viewport `cover` crops
+          // vertically, and centring lands on the head. Bias downward so the
+          // embroidered sleeve — the thing being sold — stays in shot.
+          style={{ objectPosition: "center 62%" }}
         />
         <div
           className="absolute inset-0"
           style={{
+            // The hero frame is pale satin under a window, so the type sits on
+            // near-white more often than not. Weighted for the worst case, not
+            // the average one.
             background:
-              "linear-gradient(to top, rgba(26,24,21,.62) 0%, rgba(26,24,21,.28) 34%, rgba(26,24,21,0) 66%)",
+              "linear-gradient(to top, rgba(26,24,21,.80) 0%, rgba(26,24,21,.46) 30%, rgba(26,24,21,0) 68%)",
           }}
         />
         <div className="container-l absolute inset-x-0 bottom-0" style={{ paddingBlockEnd: 48 }}>
@@ -84,10 +101,12 @@ export default async function HomePage() {
         <div className="container-l grid items-center gap-10 py-16 md:grid-cols-2 md:py-24">
           <div className="crop-45 relative">
             <Image
-              src={featured[2]?.images[0]?.url ?? hero}
-              alt="الأتيليه"
+              src={EDITORIAL_IMAGES.atelier.url}
+              alt="تطريز يدوي على قطعة من ليريشيا"
               fill
               sizes="(min-width:768px) 45vw, 90vw"
+              placeholder="blur"
+              blurDataURL={EDITORIAL_IMAGES.atelier.blur}
               className="object-cover"
             />
           </div>
@@ -112,26 +131,33 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 4 · Category triptych ────────────────────────────── */}
+      {/* ── 4 · Edits ────────────────────────────────────────── */}
       <section className="container-l" style={{ marginBlockStart: "var(--section-gap)" }}>
-        <SectionLabel title="تسوّقي حسب النوع" />
-        <div
-          className="mt-8 grid gap-[var(--grid-gutter)] md:grid-cols-3"
-        >
-          {(["abaya", "bisht", "jalabiya"] as const).map((cat, i) => {
-            const p = featured.find((f) => f.category === cat) ?? featured[i];
+        <SectionLabel title="تسوّقي حسب المناسبة" />
+        <div className="mt-8 grid gap-[var(--grid-gutter)] md:grid-cols-3">
+          {EDITS.map((edit, i) => {
+            const p = featured.find((f) => f.slug === edit.slug) ?? featured[i];
+            const img = p?.images[0];
             return (
-              <Link key={cat} href={`/shop?category=${cat}`} className="group block">
+              <Link key={edit.label} href={edit.href} className="group block">
                 <div className="crop-57 relative">
-                  {p?.images[0] && (
+                  {img && (
                     <Image
-                      src={p.images[0].url}
-                      alt={CATEGORY_LABEL[cat]}
+                      src={img.url}
+                      alt={edit.label}
                       fill
                       sizes="(min-width:768px) 33vw, 90vw"
                       className="object-cover transition-opacity duration-300 group-hover:opacity-90"
                     />
                   )}
+                  <span
+                    className="absolute inset-x-0 bottom-0"
+                    style={{
+                      blockSize: "45%",
+                      background:
+                        "linear-gradient(to top, rgba(26,24,21,.55), rgba(26,24,21,0))",
+                    }}
+                  />
                   <span
                     className="absolute bottom-5 label"
                     style={{
@@ -141,13 +167,41 @@ export default async function HomePage() {
                       fontFamily: "var(--font-display)",
                     }}
                   >
-                    {CATEGORY_LABEL[cat]}
+                    {edit.label}
                   </span>
                 </div>
               </Link>
             );
           })}
         </div>
+      </section>
+
+      {/* ── 4b · The box ─────────────────────────────────────── */}
+      <section className="container-l" style={{ marginBlockStart: "var(--section-gap)" }}>
+        <SectionLabel title="تصلك مغلّفة" />
+        <div className="mt-8 grid gap-[var(--grid-gutter)] md:grid-cols-3">
+          {EDITORIAL_IMAGES.packaging.map((img, i) => (
+            <div key={img.url} className="relative" style={{ aspectRatio: "1 / 1" }}>
+              <Image
+                src={img.url}
+                alt="تغليف ليريشيا"
+                fill
+                sizes="(min-width:768px) 33vw, 90vw"
+                placeholder="blur"
+                blurDataURL={img.blur}
+                className="object-cover"
+                style={{ opacity: i === 1 ? 1 : 0.97 }}
+              />
+            </div>
+          ))}
+        </div>
+        <p
+          className="mt-6 text-ink2"
+          style={{ fontSize: "var(--t-body-s)", lineHeight: 1.85, maxInlineSize: "52ch" }}
+        >
+          كل قطعة تُطوى وتُغلَّف باسمك قبل أن تخرج من الأتيليه. البطاقة مكتوبة
+          بخطّ اليد، والتوصيل داخل ليبيا.
+        </p>
       </section>
 
       {/* ── 5 · Occasion edit ────────────────────────────────── */}

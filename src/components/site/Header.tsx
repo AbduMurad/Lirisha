@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/CartProvider";
-import { CATEGORY_LABEL } from "@/lib/catalog-shared";
-
+/**
+ * Only routes that land on something. The catalogue is nine abayas today, so a
+ * "بشوت" tab would open an empty grid — the fastest way to make a small
+ * collection look broken rather than curated. Add the tab back when the pieces
+ * exist.
+ */
 const NAV = [
-  { href: "/shop?category=abaya", label: CATEGORY_LABEL.abaya },
-  { href: "/shop?category=bisht", label: CATEGORY_LABEL.bisht },
-  { href: "/shop?category=jalabiya", label: CATEGORY_LABEL.jalabiya },
   { href: "/shop", label: "كل القطع" },
+  { href: "/shop?occasion=مناسبات", label: "لمناسباتك" },
+  { href: "/shop?embroidery=تطريز يدوي", label: "المطرّز يدوياً" },
   { href: "/atelier", label: "الأتيليه" },
 ];
 
